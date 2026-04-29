@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "prompt": "Хочу сделать приложение для трекинга привычек",
+    "expected": "Phase 0 archetype = mobile-utility detected. Phase 1 batch issued in Russian (5 questions or 4 if Q1 skipped). Phase 2 inferred draft uses habit-tracker defaults from product-archetypes.md (5 screens: home, detail, add, stats, settings; 3 flows: onboarding, daily logging, review progress). Phase 3 targeted follow-ups about auth, paywall, notifications. Final spec: English, archetype mobile-utility, density type high-density, position-4 table for all screens, 3 variation dimensions, saved as ux-spec-YYYY-MM-DD-habit-tracker.md.",
+    "tests": "archetype detection + batch interview + inferred draft + handoff §8 fully filled + English output despite Russian input"
+  },
+  {
+    "id": 2,
+    "prompt": "Make me a dashboard for monitoring server metrics",
+    "expected": "Phase 0 archetype = dashboard. Phase 1 batch in English with Q1 skipped (or noted). Phase 2 draft uses dashboard defaults (overview grid, drill-down, alerts, comparison, settings). Density type high-density. Reference inspiration mentions Datadog/Grafana/Honeycomb. Variation dimensions include tile density, sidebar treatment. No advisor mode triggered (request is concrete).",
+    "tests": "concrete-input path + dashboard archetype + skip advisor mode + English-to-English"
+  },
+  {
+    "id": 3,
+    "prompt": "Делаю что-то для финансов, ещё не понимаю что",
+    "expected": "Phase 0 detects ambiguity → switches to advisor mode immediately, does NOT run Phase 1 batch. Proposes 3 archetypes with tradeoffs: (a) personal expense tracker, (b) investment dashboard, (c) B2B accounting. Asks user to pick. Does not generate spec until user chooses.",
+    "tests": "advisor mode trigger + 3 differentiated options + holding back from Phase 1"
+  },
+  {
+    "id": 4,
+    "prompt": "Нужен сервис записи к врачу онлайн",
+    "expected": "Phase 0 archetype borderline (mobile-utility / web-app). Phase 1 batch with Q1 noting both options. Phase 2 draft includes flows: search doctor → book slot → confirm. States: no slots / cancelled / reminder. Final spec captures auth (likely email + sms verification), notification model, time-zone handling.",
+    "tests": "borderline archetype handling + flow synthesis + state coverage"
+  },
+  {
+    "id": 5,
+    "prompt": "Хочу landing для AI-инструмента, сегмент — разработчики",
+    "expected": "Phase 0 archetype = landing. Phase 1 batch in Russian. Phase 2 draft minimal screens (single page with sections: hero, features, social proof, FAQ, CTA, footer). Audience inferred = developers (mentioned). Density restrained. References include Linear, Vercel, Plain. Final spec: hi-fi prototype delivery, 3 variation dimensions (hero layout, pricing presentation, typography pairing).",
+    "tests": "landing archetype + audience-driven inference + minimal-screen spec + delivery format = hi-fi prototype"
+  }
+]
