@@ -5,3 +5,6 @@
 node_modules/
 __pycache__/
 *.pyc
+
+# AI agent local project memory (per ~/.claude/CLAUDE.md global rule — never commit)
+context-map-*/

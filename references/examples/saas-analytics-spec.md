@@ -288,12 +288,10 @@
 
 ### 8.1 Recommended delivery format
 
-- [x] **Overview tile** (all 8 screens side by side, static)
-- [ ] Flow demo
-- [ ] Hi-fi prototype
-- [ ] Multi-format
+- [x] **`cjm-canvas`** — 8 screens, 4 flows (routine check-in / incident response / saved-view / comparison), with empty-state branching (S8) and search-overlay state (S6). Fails all 3 skip-conditions decisively.
+- [ ] `hi-fi-static`
 
-**Reasoning:** 8 screens with shared visual language (filter bars, panels, sparklines). Overview tile is best for evaluating system consistency. Flow demo could come after for the cmd+k interaction specifically.
+**Reasoning:** 8 screens with shared visual language (filter bars, panels, sparklines, sidebar) and 4 distinct flows. CJM canvas lets the user click through Overview → Drill-down → Comparison in one HTML, toggle tile-density / sidebar / color-system variants per screen, and copy lock-in choices back to Claude.
 
 ### 8.2 Information density type
 
@@ -327,11 +325,15 @@
 
 ### 8.5 Tweaks worth exposing
 
-- Theme (dark / light / auto)
-- Tile density (compact / comfortable / spacious)
-- Sidebar behavior (persistent / collapsible / hidden)
-- Default time range (15m / 1h / 6h / 24h)
-- Show alerts in sidebar (yes / no)
+- Theme (dark / light / auto) [scope: global]
+- Tile density (compact / comfortable / spacious) [scope: S1] — §8.4 DIM 1
+- Sidebar behavior (persistent / collapsible / hidden) [scope: global] — §8.4 DIM 3
+- Color system (dark + status accent / light professional / mixed) [scope: global] — §8.4 DIM 2
+- Default time range preset (15m / 1h / 6h / 24h) [scope: S1, S2]
+- Show alerts in sidebar (yes / no) [scope: global]
+- Drill-down panel grid (2-col / 3-col / freeform) [scope: S2]
+- Comparison split direction (vertical / horizontal) [scope: S3]
+- Cmd+K result categories layout (grouped / flat / tabs) [scope: S6]
 
 ### 8.6 Brand asset checklist
 
@@ -342,9 +344,36 @@
 - [ ] Reference inspiration provided (Datadog, Grafana, Honeycomb, Linear)
 - [x] **Recommend huashu run §1.a Core Asset Protocol** for logo + competitor UI reference screenshots
 
-### 8.7 Flow vs. overview routing hint
+### 8.7 Canvas construction hint (for huashu)
 
-Overview tile: huashu generates 8 screens side by side, possibly using `browser_window.jsx` from assets, with consistent panel components across S1, S2, S3. Static — no clickable AppPhone state. Flow demo can come later if user wants the cmd+k interaction polished.
+cjm-canvas single HTML (React + Babel via CDN). Stage area: iframe wrapping desktop-sized viewport (≥1280px) with browser chrome (3 traffic dots, URL bar showing the product domain `pulse.example.com`, optional bookmarks bar) for the active screen. Above the chrome: pill `S<id> · <NAME>`.
+
+Right sidebar (~360–400px sticky, 4 blocks):
+1. **Tweaks** — filter §8.5 by active screen `[scope]`. Tweaks tagged with `§8.4 DIM <n>` headings render as primary toggle groups; non-DIM tweaks below in a "Polish" section.
+2. **Flow steps** — 4 flows from §3 (Routine check-in / Incident response / Saved-view / Comparison). Default flow on canvas open = Routine check-in starting at S1.
+3. **Alternate states** — sourced from §5 states + §9 risks. Examples:
+   - `S1 Overview · Stale data banner` — VARIANT 1
+   - `S1 Overview · Per-tile data unavailable` — VARIANT 2
+   - `S2 Drill-down · No metrics in range` — VARIANT 3
+   - `S2 Drill-down · Per-panel error` — VARIANT 4
+   - `S4 Alerts · No active alerts` — VARIANT 5
+   - `S6 Cmd+K · Search unavailable` — SWAP (overlays any screen)
+   - `S8 First-launch · No data sources connected` — VARIANT 6
+4. **Meta footer** — `SOURCE · ux-spec-2026-04-28-server-metrics-dashboard.md` / `SYSTEM · — (no design system)` / `DENSITY · HIGH-DENSITY`.
+
+Sticky bottom button: "Copy lock-in prompt" — generates §8.8 prompt with current selections, writes to clipboard.
+
+### 8.8 Lock-in prompt template (for the Copy button)
+
+```
+Lock these design choices into the UX spec at /Users/me/Desktop/projects/metrics-dashboard/ux-spec-2026-04-28-server-metrics-dashboard.md:
+
+Screen <ACTIVE-S-id> · <ACTIVE-SCREEN-NAME>:
+- §8.4 DIM <n> <NAME>: <SELECTED-VARIANT>
+(repeat per active tweak that maps to a §8.4 dimension)
+
+Action: update §8.4 — mark these variants as "locked" for this screen and move non-chosen variants to §9.5 Considered Alternatives. Re-run §6 self-review and regenerate the §8 hand-off phrase.
+```
 
 ## 9. Open Questions & Assumptions
 
@@ -371,3 +400,16 @@ Overview tile: huashu generates 8 screens side by side, possibly using `browser_
 - Cmd+K global search
 - Standard alerts panel layout
 - Settings split into Profile / Preferences / Notifications / API tokens
+
+### Product Risks
+
+- **Datadog/Prometheus API rate limits:** scaling beyond ~500 services hits upstream rate limits and partial-data UI states. Mitigation — batch + cache layer + per-tile staleness indicator instead of failing the whole grid.
+- **Real-time update jank:** WebSocket pushes every 30s across 50+ panels can drop frames during scrub. Mitigation — debounce render to RAF + only update changed panels.
+- **Alert fatigue mis-triage:** all alerts shown equally → noisy services drown out incidents. Mitigation — severity-weighted sort + collapsed-by-default for "info" severity.
+- **Saved-view drift:** team renames a service → saved views break silently. Mitigation — soft-resolve by service ID + warn-on-load if any filter resolved 0 services.
+- **Cmd+K result staleness:** search index updates lag behind service registry. Mitigation — display "Last indexed Xm ago" in cmd+k empty state + manual refresh.
+- **Compare view perf:** 2× panels on S3 doubles query cost. Mitigation — share queries between columns when filters match + skeleton-stream individual panels.
+
+### Considered Alternatives (§9.5)
+
+> Empty at first generation. Will populate when the user runs the cjm-canvas Copy button and pastes the lock-in prompt back.

@@ -1,6 +1,6 @@
 # UX Spec Template
 
-This is the exact markdown structure of the output. All 9 sections must be present. Empty sections are forbidden — fill, infer, or move the gap to §9 "Open questions".
+This is the exact markdown structure of the output. All 9 sections must be present (10 if mobile track active). Empty sections are forbidden — fill, infer, or move the gap to §9 "Open questions". §9.5 Considered Alternatives is the only deliberately-empty subsection at first generation (it's the round-trip target for the cjm-canvas Copy button).
 
 The spec is **always English**, regardless of input language.
 
@@ -140,14 +140,12 @@ This section pre-answers huashu's standard interview. Fill all sub-sections.
 
 ### 8.1 Recommended delivery format
 
-Pick one (or rank if ambiguous):
+Pick exactly one. Default = `cjm-canvas`. Pick `hi-fi-static` only when project meets ALL three skip-conditions: ≤2 screens AND ≤1 flow AND no anon↔authed / multi-state transitions worth exploring.
 
-- [ ] **Overview tile** (all screens side by side, static) — best for design review, comparing layouts, walking through a stack
-- [ ] **Flow demo** (single clickable iPhone with state) — best for showing one user journey
-- [ ] **Hi-fi prototype** (full hi-fi with real data) — best for client/stakeholder presentation
-- [ ] **Multi-format** (overview + 1 deep flow) — for big projects
+- [ ] **`cjm-canvas`** — interactive HTML canvas: iframe-wrapped screen preview (with fake browser chrome) + right sidebar with (a) §8.4 tweak toggles filtered to the active screen, (b) numbered CJM flow steps (clickable to switch active screen), (c) alternate states / variant swaps reachable from any step, (d) meta footer (source spec / design system / density), (e) "Copy lock-in prompt" button at the bottom of the sidebar. Default for everything ≥3 screens or ≥2 flows or with anon↔authed transitions.
+- [ ] **`hi-fi-static`** — single full-fidelity HTML screen (or single landing page) with no canvas chrome and no flow sidebar. Use only for tiny projects: 1–2 screens, 1 flow, no state branches.
 
-**Reasoning:** <why this format fits this product>
+**Reasoning:** <why this format fits this product — reference screen count, flow count, state-branching complexity>
 
 ### 8.2 Information density type
 
@@ -179,11 +177,12 @@ Pick one:
 
 ### 8.5 Tweaks worth exposing
 
-Parameters huashu should make live-tunable in the prototype:
+Parameters huashu should make live-tunable in the prototype. Each tweak MUST be tagged with `[scope: global]` (applies to whole canvas) or `[scope: S<id>, S<id>]` (applies only when those screens are active in the canvas). The cjm-canvas right sidebar filters tweaks by current screen using these tags.
 
-- <e.g., "Primary color (rust / teal / charcoal)">
-- <e.g., "Density (compact / comfortable / spacious)">
-- <e.g., "Habit list layout (grid / list / calendar)">
+- <e.g., "Primary color (rust / teal / charcoal) [scope: global]">
+- <e.g., "Density (compact / comfortable / spacious) [scope: global]">
+- <e.g., "Habit list layout (grid / list / calendar) [scope: S1]">
+- <e.g., "Save-bar position (top-right / bottom-right / inline) [scope: S2, S4]">
 
 ### 8.6 Brand asset checklist
 
@@ -194,13 +193,39 @@ Parameters huashu should make live-tunable in the prototype:
 - [ ] Reference inspiration provided
 - [ ] **Recommend huashu run §1.a Core Asset Protocol** (if any of the above is missing for a real brand — required even if user said "no brand yet")
 
-### 8.7 Flow vs. overview routing hint
+### 8.7 Canvas construction hint (for huashu)
 
-Per huashu's `App / iOS prototype` rules:
+If §8.1 = `cjm-canvas`, huashu MUST produce a single HTML file (React + Babel via CDN, no build step) with this structure:
 
-- If §8.1 = "Overview tile" → huashu uses static side-by-side iPhones, no AppPhone state machine
-- If §8.1 = "Flow demo" → huashu uses single clickable iPhone with AppPhone state manager
-- If §8.1 = "Hi-fi prototype" → huashu picks based on audience (overview for stakeholders, flow for users)
+**Layout:**
+- Left/center stage: iframe (or contentWindow-equivalent component) wrapping the active screen render. Wrap in fake browser chrome (3 traffic-light dots, URL bar showing the product domain from §1, optional secondary bookmarks bar). Above the chrome, a small pill `S<id> · <SCREEN-NAME>` showing the active screen.
+- Right sidebar (~360–400px, sticky): contains four blocks in this order:
+  1. **Tweaks** — render only §8.5 entries whose `[scope]` tag matches the active screen (or `global`). Each tweak is a labeled toggle group (3 buttons typical). Each toggle group MUST be cross-referenced to its §8.4 dimension when applicable, with the heading format `§8.4 DIM <n> <NAME>` so users see which spec axis they are touching.
+  2. **Flow steps** — numbered list of the active CJM flow from §3. Active step is highlighted (filled dot + accent text); inactive steps muted. Clicking a step swaps the active screen in the canvas (and the sidebar re-filters tweaks accordingly).
+  3. **Alternate states** — corner-case states / variant swaps reachable from any step. Source: §5 states (non-success branches) + §9 risks. Each row labeled `<screen> · <state>` with a `VARIANT N` or `SWAP` tag.
+  4. **Meta footer** — three lines: `SOURCE · ux-spec-<date>-<slug>.md`, `SYSTEM · <design-system from §7 or "—">`, `DENSITY · <RESTRAINED | HIGH-DENSITY>`.
+- **"Copy lock-in prompt" button** — sticky at the bottom of the sidebar. On click, assembles the lock-in prompt (see §8.8) from current tweak selections and writes to clipboard via `navigator.clipboard.writeText`. Show a 2s "Copied" toast / inline confirmation.
+
+**State management:** all tweak picks held in React state. Switching screen via flow-step click updates active screen + re-filters tweaks. No page reload, no router.
+
+If §8.1 = `hi-fi-static`, huashu produces a single full-fidelity screen with no canvas chrome, no sidebar, no flow nav. Tweaks (if any) sit in a small floating panel; no clipboard prompt button.
+
+### 8.8 Lock-in prompt template (for the cjm-canvas Copy button)
+
+The Copy button assembles this exact prompt and writes it to clipboard. Variables resolve from current state:
+
+```
+Lock these design choices into the UX spec at <ABS-PATH-FROM-§8.1-METADATA>:
+
+Screen <ACTIVE-S-id> · <ACTIVE-SCREEN-NAME>:
+- §8.4 DIM <n> <NAME>: <SELECTED-VARIANT>
+- §8.4 DIM <n> <NAME>: <SELECTED-VARIANT>
+(repeat per active tweak)
+
+Action: update §8.4 — mark these variants as "locked" for this screen and move non-chosen variants to §9.5 Considered Alternatives. Re-run §6 self-review and regenerate the §8 hand-off phrase.
+```
+
+The absolute path of the spec must be embedded into the canvas as a constant (huashu reads it from the user's hand-off message). If the user moves the spec, they re-run the hand-off phrase to regenerate the canvas with the new path.
 
 ## 9. Open Questions & Assumptions
 
@@ -224,6 +249,12 @@ Per huashu's `App / iOS prototype` rules:
 
 - **<Risk name>:** <one-sentence description>. Mitigation — <one-sentence approach>.
 - **<Risk name>:** ...
+
+### Considered Alternatives (§9.5)
+
+> Initially empty. Populated automatically when the user pastes a "lock-in prompt" from the cjm-canvas Copy button — non-chosen §8.4 variants are archived here per screen so future iterations remember what was tried and rejected. Format:
+>
+> - **S<id> · §8.4 DIM <n> <NAME>:** considered `<variant-A>`, `<variant-B>`; locked `<variant-C>` on YYYY-MM-DD.
 
 ## 10. Mobile / Responsive Design Block
 
@@ -265,7 +296,7 @@ Per huashu's `App / iOS prototype` rules:
 **Hand-off phrase suggestion** (paste into huashu chat):
 
 ```
-Read this UX spec and produce a <delivery format from §8.1> with <variation count from §8.4> variations exploring <dimensions from §8.4>. Density type: <from §8.2>. Honor §8.3 per-screen position-4 answers. <If §7 design direction = "no" → "Use huashu fallback advisor mode to recommend 3 design directions before proceeding."> <If §10 present → "Honor §10 mobile/responsive specifications when designing mobile/tablet variants.">
+Read this UX spec at <ABS-PATH>. Produce a <cjm-canvas | hi-fi-static from §8.1> exploring <dimensions from §8.4> as variant toggles. Density type: <from §8.2>. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules (filtered tweaks per active screen, flow-step nav, alternate-states block, meta footer, "Copy lock-in prompt" button generating §8.8 prompt). <If §7 design direction = "no" → "Use huashu fallback advisor mode to recommend 3 design directions before proceeding."> <If §10 present → "Honor §10 mobile/responsive specifications when designing mobile/tablet variants.">
 ```
 ```
 
@@ -320,11 +351,13 @@ Read this UX spec and produce a <delivery format from §8.1> with <variation cou
 ### §8 Hand-off to huashu
 
 - The whole point of this skill is this section being complete.
-- §8.1 delivery format: pick one — don't punt.
+- §8.1 delivery format: pick exactly one of `cjm-canvas` (default) / `hi-fi-static` (only when ≤2 screens AND ≤1 flow AND no anon↔authed / multi-state branching). Don't punt.
 - §8.2 density type: pick one — products live or die on this.
 - §8.3 position-4 table: every screen, no exceptions.
 - §8.4 variation dimensions: 2-3 axes, with reasoning.
-- §8.5 tweaks: exposing the right knobs accelerates iteration.
+- §8.5 tweaks: exposing the right knobs accelerates iteration. **Each tweak MUST carry a `[scope]` tag** (`global` or `S<id>[, S<id>...]`) so the cjm-canvas right sidebar filters them per active screen.
+- §8.7 canvas construction hint: tells huashu the exact HTML/React structure of the canvas. Don't simplify it away — that's what makes the deliverable interactive.
+- §8.8 lock-in prompt template: defines the clipboard payload of the Copy button. Embed the spec's absolute path so the round-trip back to a Claude session is one paste.
 
 ### §9 Open Questions & Assumptions
 
@@ -332,6 +365,7 @@ Read this UX spec and produce a <delivery format from §8.1> with <variation cou
 - "Open questions" = things you decided not to ask in Phase 3. Surface them here so the user knows what they didn't decide.
 - "Inferred from archetype defaults" = transparency about what came from `product-archetypes.md` vs. user input.
 - **§9.4 Product Risks** — required. List 3–6 risks (API outages, user confusion, billing edges, data integrity, concurrency, auth) with one-sentence mitigation each. Skipping = blind spot.
+- **§9.5 Considered Alternatives** — empty at first generation; this is the canonical landing zone for non-chosen §8.4 variants when the user runs the cjm-canvas Copy button and pastes the lock-in prompt back. Always include the empty subsection so the round-trip target exists.
 
 ### §10 Mobile / Responsive Design Block (CONDITIONAL)
 

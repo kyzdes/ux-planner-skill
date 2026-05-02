@@ -2,14 +2,14 @@
   {
     "id": 1,
     "prompt": "Хочу сделать приложение для трекинга привычек",
-    "expected": "Phase 0 archetype = mobile-utility detected. Phase 1 batch issued in Russian (5 questions or 4 if Q1 skipped). Phase 2 inferred draft uses habit-tracker defaults from product-archetypes.md (5 screens: home, detail, add, stats, settings; 3 flows: onboarding, daily logging, review progress). Phase 3 targeted follow-ups about auth, paywall, notifications. Final spec: English, archetype mobile-utility, density type high-density, position-4 table for all screens, 3 variation dimensions, saved as ux-spec-YYYY-MM-DD-habit-tracker.md.",
-    "tests": "archetype detection + batch interview + inferred draft + handoff §8 fully filled + English output despite Russian input"
+    "expected": "Phase 0 archetype = mobile-utility detected. Phase 1 batch issued in Russian (5 questions or 4 if Q1 skipped). Phase 2 inferred draft uses habit-tracker defaults from product-archetypes.md (5 screens: home, detail, add, stats, settings; 3 flows: onboarding, daily logging, review progress). Phase 3 targeted follow-ups about auth, paywall, notifications. Final spec: English, archetype mobile-utility, density type high-density, position-4 table for all screens, 3 variation dimensions. §8.1 = cjm-canvas (5+ screens, 3 flows → fails skip-conditions). §8.5 every tweak carries [scope: ...] tag. §8.7 describes the 4 sidebar blocks. §8.8 lock-in prompt template embeds the spec absolute path. §9.5 Considered Alternatives present (empty). Saved as ux-spec-YYYY-MM-DD-habit-tracker.md.",
+    "tests": "archetype detection + batch interview + inferred draft + handoff §8 fully filled (cjm-canvas mandatory) + scope-tagged tweaks + English output despite Russian input"
   },
   {
     "id": 2,
     "prompt": "Make me a dashboard for monitoring server metrics",
-    "expected": "Phase 0 archetype = dashboard. Phase 1 batch in English with Q1 skipped (or noted). Phase 2 draft uses dashboard defaults (overview grid, drill-down, alerts, comparison, settings). Density type high-density. Reference inspiration mentions Datadog/Grafana/Honeycomb. Variation dimensions include tile density, sidebar treatment. No advisor mode triggered (request is concrete).",
-    "tests": "concrete-input path + dashboard archetype + skip advisor mode + English-to-English"
+    "expected": "Phase 0 archetype = dashboard. Phase 1 batch in English with Q1 skipped (or noted). Phase 2 draft uses dashboard defaults (overview grid, drill-down, alerts, comparison, settings). Density type high-density. Reference inspiration mentions Datadog/Grafana/Honeycomb. Variation dimensions include tile density, sidebar treatment. No advisor mode triggered (request is concrete). §8.1 = cjm-canvas (5+ screens with shared chrome → cjm-canvas mandatory). §8.5 tweaks scoped per screen (tile-density [scope: S1], comparison-split [scope: S3], etc.). §8.7 references browser chrome with product domain in URL bar.",
+    "tests": "concrete-input path + dashboard archetype + skip advisor mode + cjm-canvas with desktop browser chrome + English-to-English"
   },
   {
     "id": 3,
@@ -20,13 +20,13 @@
   {
     "id": 4,
     "prompt": "Нужен сервис записи к врачу онлайн",
-    "expected": "Phase 0 archetype borderline (mobile-utility / web-app). Phase 1 batch with Q1 noting both options. Phase 2 draft includes flows: search doctor → book slot → confirm. States: no slots / cancelled / reminder. Final spec captures auth (likely email + sms verification), notification model, time-zone handling.",
-    "tests": "borderline archetype handling + flow synthesis + state coverage"
+    "expected": "Phase 0 archetype borderline (mobile-utility / web-app). Phase 1 batch with Q1 noting both options. Phase 2 draft includes flows: search doctor → book slot → confirm. States: no slots / cancelled / reminder. Final spec captures auth (likely email + sms verification), notification model, time-zone handling. §8.1 = cjm-canvas (multi-screen booking flow with auth states). Alternate states block in §8.7 covers slot-conflict, payment-failure, sms-resend, cancelled-by-doctor.",
+    "tests": "borderline archetype handling + flow synthesis + state coverage + cjm-canvas with rich alternate-states sidebar"
   },
   {
     "id": 5,
     "prompt": "Хочу landing для AI-инструмента, сегмент — разработчики",
-    "expected": "Phase 0 archetype = landing. Phase 1 batch in Russian. Phase 2 draft minimal screens (single page with sections: hero, features, social proof, FAQ, CTA, footer). Audience inferred = developers (mentioned). Density restrained. References include Linear, Vercel, Plain. Final spec: hi-fi prototype delivery, 3 variation dimensions (hero layout, pricing presentation, typography pairing).",
-    "tests": "landing archetype + audience-driven inference + minimal-screen spec + delivery format = hi-fi prototype"
+    "expected": "Phase 0 archetype = landing. Phase 1 batch in Russian. Phase 2 draft minimal screens (single page with sections: hero, features, social proof, FAQ, CTA, footer). Audience inferred = developers (mentioned). Density restrained. References include Linear, Vercel, Plain. Final spec: §8.1 = hi-fi-static (1 screen + 1 flow + no auth branching → all 3 skip-conditions met), 3 variation dimensions (hero layout, pricing presentation, typography pairing). §8.7 notes no CJM sidebar, no Copy-prompt button. §8.5 tweaks still carry [scope] tags for forward-compat.",
+    "tests": "landing archetype + audience-driven inference + minimal-screen spec + delivery format = hi-fi-static (only valid hi-fi-static path: ≤2 screens AND ≤1 flow AND no auth branching)"
   }
 ]

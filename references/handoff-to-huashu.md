@@ -1,6 +1,6 @@
 # Hand-off to huashu-design
 
-This document explains the final step of the workflow: how to hand the spec to huashu-design cleanly so huashu doesn't re-run its own interview.
+This document explains the final step of the workflow: how to hand the spec to huashu-design cleanly so huashu doesn't re-run its own interview, and so the deliverable is an interactive canvas the user can iterate on with a one-click round-trip back to Claude.
 
 ---
 
@@ -19,9 +19,35 @@ When huashu starts a new design task, its workflow.md prescribes a 10-question i
 | Tweaks (live-tunable params) | §8.5 |
 | Position-4 per screen (narrative role / distance / temperature / capacity) | §8.3 |
 | Information density type (restrained / high) | §8.2 |
-| Specific task details (overview vs flow demo, audience density, etc.) | §8.1 + §8.7 |
+| Specific task details (canvas construction, copy-prompt) | §8.1 + §8.7 + §8.8 |
 
 Anything not pre-answered should be in §9 (Open Questions). If something is genuinely unknown, huashu can choose its default — but at least the gap is acknowledged.
+
+---
+
+## Two delivery formats — pick at §8.1
+
+### `cjm-canvas` (default)
+
+A single self-contained HTML file (React + Babel via CDN, no build) with:
+
+- **Stage area** — iframe-wrapped active screen with fake browser chrome (3 traffic-light dots, URL bar showing the §1 product domain). Above the chrome a small pill `S<id> · <SCREEN-NAME>` flags the active screen.
+- **Right sidebar (~360–400px, sticky)** — four blocks in this order:
+  1. **Tweaks** — only §8.5 entries whose `[scope]` matches the active screen (or `global`). Each entry rendered as a labeled toggle group; if cross-referenced to a §8.4 dimension, the heading is `§8.4 DIM <n> <NAME>` so the user sees which axis they're touching.
+  2. **Flow steps** — numbered list of the active CJM flow from §3, current step highlighted, others muted. Clicking a step swaps the active screen (canvas + sidebar re-filter).
+  3. **Alternate states** — corner-case states / variant swaps reachable from any step, sourced from §5 (non-success branches) and §9 (risks). Each row labeled `<screen> · <state>` with a `VARIANT N` or `SWAP` tag.
+  4. **Meta footer** — three lines: `SOURCE · ux-spec-<date>-<slug>.md`, `SYSTEM · <design-system or "—">`, `DENSITY · <RESTRAINED | HIGH-DENSITY>`.
+- **"Copy lock-in prompt" button** — sticky at the sidebar bottom. On click, assembles the §8.8 prompt with the active screen's selected tweaks and writes to clipboard via `navigator.clipboard.writeText`. Shows a 2-second "Copied" toast.
+
+### `hi-fi-static`
+
+A single full-fidelity HTML page (one screen or one landing) with no canvas chrome, no sidebar, no flow nav. Reserved for tiny products that meet **all three** skip-conditions:
+
+1. ≤2 screens
+2. ≤1 flow
+3. No anon↔authed transitions and no multi-state branches worth exploring
+
+If even one condition fails → use `cjm-canvas`.
 
 ---
 
@@ -37,7 +63,7 @@ After saving the spec, tell the user the spec is ready and give them the exact p
 Чтобы запустить дизайн в huashu, открой новую сессию и скажи (скопируй блок):
 
 ```
-Read this UX spec: <full-path> and produce a <delivery-format> with <N> variations exploring <dimensions>. Density type: <restrained | high-density>. Honor §8.3 per-screen position-4 answers.
+Read this UX spec at <full-path>. Produce a <cjm-canvas | hi-fi-static> exploring §8.4 dimensions as variant toggles. Density type: <restrained | high-density>. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules (filtered tweaks per active screen, flow-step nav, alternate-states block, meta footer, "Copy lock-in prompt" button generating §8.8 prompt).
 ```
 
 Если в §7 указано "design direction known: no" — добавь в фразу:
@@ -57,6 +83,8 @@ Honor §10 mobile/responsive specifications when designing mobile/tablet variant
 ```
 Run §1.a Core Asset Protocol to collect brand assets before designing.
 ```
+
+Когда canvas откроется в браузере — крути твики справа, кликай шаги CJM. Когда варианты выбраны, нажми «Copy lock-in prompt» внизу сайдбара, открой новую Claude-сессию и вставь — спека обновится: выбранные варианты залочатся в §8.4, остальные уйдут в §9.5 Considered Alternatives.
 ````
 
 ### English wrapper (when user wrote English)
@@ -67,7 +95,7 @@ Done. Spec saved at: `<full-path>/ux-spec-YYYY-MM-DD-<slug>.md`
 To start the design in huashu, open a new session and say (copy the block):
 
 ```
-Read this UX spec: <full-path> and produce a <delivery-format> with <N> variations exploring <dimensions>. Density type: <restrained | high-density>. Honor §8.3 per-screen position-4 answers.
+Read this UX spec at <full-path>. Produce a <cjm-canvas | hi-fi-static> exploring §8.4 dimensions as variant toggles. Density type: <restrained | high-density>. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules (filtered tweaks per active screen, flow-step nav, alternate-states block, meta footer, "Copy lock-in prompt" button generating §8.8 prompt).
 ```
 
 If §7 says "design direction known: no", add:
@@ -87,6 +115,8 @@ If the spec mentions a brand (logo / product names), add:
 ```
 Run §1.a Core Asset Protocol to collect brand assets before designing.
 ```
+
+When the canvas opens in your browser — toggle tweaks on the right, click CJM steps. When you've picked variants, click "Copy lock-in prompt" at the sidebar bottom, open a fresh Claude session, and paste — the spec updates: chosen variants get locked into §8.4, the rest archive into §9.5 Considered Alternatives.
 ````
 
 ---
@@ -96,16 +126,16 @@ Run §1.a Core Asset Protocol to collect brand assets before designing.
 When generating the hand-off message, substitute these from the spec:
 
 - `<full-path>` — absolute path to the spec file (use `pwd` + filename)
-- `<delivery-format>` — pull from §8.1 (e.g., "overview tile", "flow demo", "hi-fi prototype")
-- `<N>` — pull from §8.4 (default 3)
-- `<dimensions>` — pull from §8.4, comma-separated (e.g., "layout, density, color")
+- `<cjm-canvas | hi-fi-static>` — pull from §8.1 (one and only one selected)
 - `<restrained | high-density>` — pull from §8.2
+
+§8.4 variation count and dimensions are no longer inlined into the hand-off phrase — they live in §8.4 and the canvas reads them. The phrase only references the section number.
 
 ---
 
 ## Examples of complete hand-off messages
 
-### Example 1: habit tracker (mobile-utility)
+### Example 1: habit tracker (mobile-utility, cjm-canvas)
 
 ````markdown
 Готово. Спека сохранена: `/Users/me/Desktop/projects/habit-tracker/ux-spec-2026-04-28-habit-tracker.md`
@@ -113,11 +143,13 @@ When generating the hand-off message, substitute these from the spec:
 Чтобы запустить дизайн в huashu, открой новую сессию и скажи (скопируй блок):
 
 ```
-Read this UX spec: /Users/me/Desktop/projects/habit-tracker/ux-spec-2026-04-28-habit-tracker.md and produce an overview tile with 3 variations exploring layout, density, and primary-color choices. Density type: high-density. Honor §8.3 per-screen position-4 answers. Use huashu fallback advisor mode to recommend 3 design directions before generating screens.
+Read this UX spec at /Users/me/Desktop/projects/habit-tracker/ux-spec-2026-04-28-habit-tracker.md. Produce a cjm-canvas exploring §8.4 dimensions as variant toggles. Density type: high-density. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules (filtered tweaks per active screen, flow-step nav, alternate-states block, meta footer, "Copy lock-in prompt" button generating §8.8 prompt). Use huashu fallback advisor mode to recommend 3 design directions before generating screens.
 ```
+
+Когда canvas откроется — крути твики справа, кликай шаги CJM. Выбрал варианты → «Copy lock-in prompt» → новая Claude-сессия → вставь.
 ````
 
-### Example 2: server metrics dashboard (with mobile track)
+### Example 2: server metrics dashboard (with mobile track, cjm-canvas)
 
 ````markdown
 Done. Spec saved at: `/Users/me/Desktop/projects/metrics-dashboard/ux-spec-2026-04-28-server-metrics.md`
@@ -125,11 +157,13 @@ Done. Spec saved at: `/Users/me/Desktop/projects/metrics-dashboard/ux-spec-2026-
 To start the design in huashu, open a new session and say (copy the block):
 
 ```
-Read this UX spec: /Users/me/Desktop/projects/metrics-dashboard/ux-spec-2026-04-28-server-metrics.md and produce a flow demo with 3 variations exploring KPI layout (grid / freeform / single-column), chart density, and time-range UX. Density type: high-density. Honor §8.3 per-screen position-4 answers. Honor §10 mobile/responsive specifications when designing mobile/tablet variants.
+Read this UX spec at /Users/me/Desktop/projects/metrics-dashboard/ux-spec-2026-04-28-server-metrics.md. Produce a cjm-canvas exploring §8.4 dimensions as variant toggles. Density type: high-density. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules (filtered tweaks per active screen, flow-step nav, alternate-states block, meta footer, "Copy lock-in prompt" button generating §8.8 prompt). Honor §10 mobile/responsive specifications when designing mobile/tablet variants.
 ```
+
+When the canvas opens in your browser, toggle tweaks on the right and click CJM steps. After you've picked variants, click "Copy lock-in prompt" at the sidebar bottom, open a fresh Claude session, and paste — the spec updates.
 ````
 
-### Example 3: SaaS landing page
+### Example 3: SaaS landing page (1 screen, hi-fi-static)
 
 ````markdown
 Готово. Спека сохранена: `/Users/me/Desktop/projects/saas-launch/ux-spec-2026-04-28-saas-landing.md`
@@ -137,8 +171,10 @@ Read this UX spec: /Users/me/Desktop/projects/metrics-dashboard/ux-spec-2026-04-
 Чтобы запустить дизайн в huashu, скажи в новой сессии (скопируй блок):
 
 ```
-Read this UX spec: /Users/me/Desktop/projects/saas-launch/ux-spec-2026-04-28-saas-landing.md and produce a hi-fi prototype with 3 variations exploring hero layout (text-left / centered / fullscreen-video), pricing presentation, and CTA placement. Density type: restrained. Honor §8.3 per-screen position-4 answers. Use huashu fallback advisor mode to recommend 3 design directions before generating screens.
+Read this UX spec at /Users/me/Desktop/projects/saas-launch/ux-spec-2026-04-28-saas-landing.md. Produce a hi-fi-static exploring §8.4 dimensions as variant toggles. Density type: restrained. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules. Use huashu fallback advisor mode to recommend 3 design directions before generating screens.
 ```
+
+(Это hi-fi-static — 1 экран, без CJM-сайдбара. Если потом захочешь покрутить варианты в интерактивном виде, конвертируй в cjm-canvas через новую сессию.)
 ````
 
 ---
@@ -151,6 +187,8 @@ Bad: edit the spec to remove §8 because "it's too technical". §8 is the bridge
 
 Bad: hand the same spec to huashu twice expecting different output. If huashu's first pass missed something, edit the spec (or §9 with new clarifications) before re-running.
 
+Bad: pick `hi-fi-static` for anything bigger than a 1–2 screen landing/utility just because it's "simpler". You lose the entire iteration loop (tweaks, flow nav, copy-prompt round-trip). The default is `cjm-canvas` for a reason.
+
 ---
 
 ## What if huashu still asks questions despite the spec?
@@ -158,9 +196,10 @@ Bad: hand the same spec to huashu twice expecting different output. If huashu's 
 Means the spec is incomplete. Common causes:
 
 - §7 design context says "no design system" but doesn't say whether to enter advisor mode → huashu asks
-- §8.1 delivery format has multiple checkboxes → huashu asks which
+- §8.1 has neither `cjm-canvas` nor `hi-fi-static` clearly checked → huashu asks
 - §8.3 position-4 table missing some screens → huashu asks for those
 - §8.4 variation dimensions has only 1 dimension → huashu asks for more
+- §8.5 tweaks missing `[scope]` tags → huashu can't filter the sidebar per screen, asks
 
 **Fix forward, not backward**: don't blame huashu, edit the spec to be more decisive, save, re-paste the hand-off message.
 
@@ -175,10 +214,22 @@ When user comes back to extend a feature:
 3. Add new screens (if any) to §4 (Screen Inventory)
 4. Add per-screen briefs in §5
 5. Update §8.3 position-4 table for new screens
-6. **Bump the date in the filename** (rename old to `ux-spec-OLD-DATE-X.md`, save as `ux-spec-NEW-DATE-X.md`) so version history is visible
-7. Generate fresh hand-off message reflecting any §8 changes
+6. Update §8.5 tweaks (add new `[scope]` tags as needed)
+7. **Bump the date in the filename** (rename old to `ux-spec-OLD-DATE-X.md`, save as `ux-spec-NEW-DATE-X.md`) so version history is visible
+8. Generate fresh hand-off message reflecting any §8 changes
 
 Don't re-run Phase 1 batch for an extension — it's noise. Skip to Phase 3 with focused questions about the new feature only.
+
+### When user pastes a lock-in prompt back from cjm-canvas
+
+The Copy-prompt round-trip lands in a fresh Claude session as text starting with `Lock these design choices into the UX spec at <abs-path>:`. Treat as a targeted spec update:
+
+1. Read the spec at the path
+2. Find §8.4 — for each `DIM <n>` mentioned, mark the chosen variant `[locked YYYY-MM-DD]` and remove unselected variants from §8.4
+3. Add removed variants to §9.5 Considered Alternatives in the format: `**S<id> · §8.4 DIM <n> <NAME>:** considered <list>; locked <chosen> on YYYY-MM-DD.`
+4. Re-run §6 self-review (sequential IDs, brief-count match, etc.)
+5. Regenerate the §8 hand-off phrase if anything in §8.1/§8.2 changed
+6. Don't open Phase 1 / Phase 3 — this is a targeted edit, not a re-interview
 
 ---
 
@@ -189,14 +240,18 @@ Before printing the hand-off message, verify:
 - [ ] All 9 sections of spec are present (or 10 if mobile track active)
 - [ ] §4 IDs are contiguous (S1..SN, no gaps)
 - [ ] §5 brief count == §4 row count
-- [ ] §8.1 has exactly one delivery format checked
+- [ ] §8.1 has exactly one of `cjm-canvas` / `hi-fi-static` checked (and `hi-fi-static` only if all 3 skip-conditions met)
 - [ ] §8.2 has exactly one density type checked
 - [ ] §8.3 has a row for every screen in §4
 - [ ] §8.4 lists at least 2 variation dimensions
+- [ ] §8.5 every tweak has a `[scope]` tag (`global` or `S<id>[, S<id>...]`)
 - [ ] §8.6 brand asset checklist reflects reality (don't check "Logo provided" if user said no)
+- [ ] §8.7 canvas construction hint present (not generic — specific to this spec)
+- [ ] §8.8 lock-in prompt template references the absolute path of this spec
 - [ ] §7 design direction toggle is set ("yes — describe" OR "no — recommend advisor")
 - [ ] §6 includes per-breakpoint feature parity table (always required)
 - [ ] §9.4 Product Risks present (3–6 entries with mitigation)
+- [ ] §9.5 Considered Alternatives subsection present (empty placeholder ok at first generation)
 - [ ] §10 Mobile Block present iff mobile track confirmed in Phase 2.5
 - [ ] Hand-off phrase is a fenced code block, not a blockquote
 - [ ] No "TBD" / "TODO" anywhere

@@ -35,7 +35,7 @@ The unit of clarification is "edit my draft," not "answer my next question."
 
 ### 3. Hand-off ready
 
-The spec must pre-answer huashu's standard 10 questions. Section §8 of the output (Hand-off to huashu-design) is non-negotiable: it covers recommended delivery format (overview tile / flow demo / hi-fi), info density type, position-4 answers per screen, variation dimensions, tweaks worth exposing.
+The spec must pre-answer huashu's standard 10 questions. Section §8 of the output (Hand-off to huashu-design) is non-negotiable: it covers recommended delivery format (`cjm-canvas` interactive HTML by default, `hi-fi-static` only for tiny ≤2-screen / 1-flow products), info density type, position-4 answers per screen, variation dimensions, tweaks worth exposing (each scoped per screen), and a one-click "Copy lock-in prompt" round-trip back to a Claude session.
 
 If §8 is incomplete, huashu will start its own interview — you've failed.
 
@@ -169,6 +169,14 @@ Read `references/spec-template.md` for the exact output format. Generate the spe
 
 If user is in a project directory (has `package.json`, `pyproject.toml`, `.git`, etc.), save inside that project. Otherwise save in cwd.
 
+**§8.1 delivery format selection — apply this rule, no exceptions:**
+
+- Default = `cjm-canvas`. This delivers an interactive HTML canvas with iframe-wrapped screen preview, right-sidebar tweaks filtered per active screen, clickable CJM flow nav, alternate-states block, meta footer, and a "Copy lock-in prompt" button that round-trips selections back to a Claude session.
+- Pick `hi-fi-static` ONLY when **all three** conditions hold: ≤2 screens AND ≤1 flow AND no anon↔authed transitions AND no multi-state branching worth exploring. If even one fails → `cjm-canvas`.
+- The selection MUST be reflected in §8.1, §8.7 (canvas construction hint), and §8.8 (lock-in prompt template with embedded absolute path of the saved spec).
+- For `cjm-canvas`, every §8.5 tweak MUST carry a `[scope: global]` or `[scope: S<id>[, S<id>...]]` tag so the right sidebar filters tweaks by the active screen.
+- For `cjm-canvas`, §8.7 MUST describe the four sidebar blocks (Tweaks / Flow steps / Alternate states / Meta footer) plus the Copy button. Don't simplify to a generic "make it interactive" note.
+
 After saving, run a **mandatory self-review checklist** and output the result to the user before moving to Phase 7. Every item must be ✓ — fix inline if any is ✗.
 
 ```
@@ -177,10 +185,14 @@ After saving, run a **mandatory self-review checklist** and output the result to
 - ✓ §4 IDs are sequential (S1..SN, no gaps; renumber if any screen was removed mid-iteration)
 - ✓ §5 brief count == §4 row count (every screen has its own brief)
 - ✓ §8.3 row count == §4 row count
-- ✓ §8.1 has exactly one delivery format selected
+- ✓ §8.1 has exactly one of `cjm-canvas` / `hi-fi-static` selected (and `hi-fi-static` only if all 3 skip-conditions met)
 - ✓ §8.2 has exactly one density type selected
+- ✓ §8.5 every tweak carries a `[scope: ...]` tag
+- ✓ §8.7 canvas construction hint is specific (mentions the 4 sidebar blocks for cjm-canvas, or no-canvas note for hi-fi-static)
+- ✓ §8.8 lock-in prompt embeds the absolute path of this spec
 - ✓ §6 includes per-breakpoint feature parity (always required, even if mobile track = No)
 - ✓ §9.4 Product Risks present (3–6 risks with mitigation hints)
+- ✓ §9.5 Considered Alternatives subsection present (empty placeholder ok at first generation)
 - ✓ No "TBD" / "TODO" anywhere
 - ✓ §10 Mobile Block present iff mobile track was confirmed in Phase 2.5
 - ✓ Hand-off phrase formatted as fenced code block (not blockquote)
@@ -195,17 +207,31 @@ Tell the user the spec is ready, give the file path, and provide the exact phras
 Default hand-off phrase:
 
 ```
-Read this UX spec: <full-path>. Produce a <delivery-format from §8.1> with <N from §8.4> variations exploring <dimensions from §8.4>. Density type: <from §8.2>. Honor §8.3 per-screen position-4 answers.
+Read this UX spec at <full-path>. Produce a <cjm-canvas | hi-fi-static from §8.1> exploring §8.4 dimensions as variant toggles. Density type: <from §8.2>. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules (filtered tweaks per active screen, flow-step nav, alternate-states block, meta footer, "Copy lock-in prompt" button generating §8.8 prompt).
 ```
+
+After the hand-off block, add a short paragraph (in the user's language) explaining the round-trip loop: open canvas in browser → toggle tweaks on the right + click CJM steps → "Copy lock-in prompt" → paste in a fresh Claude session → spec auto-updates §8.4 (locked variants) and §9.5 (archived alternatives).
 
 **Memory pointer (mandatory).** After the hand-off message, save a short auto-memory entry of type `project` containing:
 - Path to the spec file
 - 1-line product framing summary
 - 3–4 key product decisions that took the most discussion (e.g., "vacancy-centric model", "versioning per edit", "anonymous→register handoff")
+- Delivery format chosen (cjm-canvas / hi-fi-static) so a follow-up session knows which deliverable shape was negotiated
 
 This prevents the next UX session from re-deriving the same decisions from scratch. Index it in `MEMORY.md` with a one-line pointer.
 
 Do not invoke huashu yourself. The user runs it when ready.
+
+### Phase 7.5 · Lock-in prompt round-trip (re-entry path)
+
+If a fresh user message starts with `Lock these design choices into the UX spec at <abs-path>:`, treat it as a re-entry into this skill at Phase 6 with a targeted spec edit — **not** a new product. Skip Phases 0–5. Steps:
+
+1. Read the spec at the path
+2. For each `§8.4 DIM <n> <NAME>: <selected-variant>` line in the message: in §8.4, mark `<selected-variant>` as `[locked YYYY-MM-DD]` and remove the unselected variants from §8.4
+3. Append removed variants to §9.5 Considered Alternatives in the format: `**S<id> · §8.4 DIM <n> <NAME>:** considered <list of removed>; locked <chosen> on YYYY-MM-DD.`
+4. Re-run the §6 self-review checklist
+5. Regenerate the §8 hand-off phrase (it stays the same shape but reflects any density/format changes if they happened)
+6. Tell the user what changed in 2–3 lines, give the updated path, exit. No new TaskCreate plan, no Phase 1 batch.
 
 ## Adaptive rules
 

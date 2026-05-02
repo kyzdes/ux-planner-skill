@@ -149,7 +149,16 @@ ux-researcher-skill/
 
 ## Status
 
-v1.1 — current release. Recent additions:
+v1.2 — current release. Additions over v1.1:
+
+- **§8.1 delivery format = `cjm-canvas` by default** (interactive HTML canvas with iframe-wrapped screen + right sidebar with §8.4 tweaks filtered per active screen, clickable CJM flow nav, alternate-states block, meta footer). Falls back to `hi-fi-static` only when ≤2 screens AND ≤1 flow AND no auth/state branching.
+- **§8.5 tweaks now require `[scope: ...]` tags** so the canvas sidebar filters them by active screen.
+- **§8.7 canvas construction hint** — explicit four-block sidebar spec for huashu (Tweaks / Flow steps / Alternate states / Meta footer).
+- **§8.8 lock-in prompt template + Copy button** at the canvas sidebar bottom — round-trip back to a Claude session via clipboard. Pasting the prompt re-enters the skill at Phase 7.5 and updates §8.4 (locked variants) + §9.5 (archived alternatives).
+- **§9.5 Considered Alternatives** — the canonical landing zone for non-chosen variants when the user iterates.
+- **Phase 7.5** — re-entry path for lock-in prompts (skip Phases 0–5, targeted spec edit only).
+
+Carried over from v1.1:
 
 - Phase 2.5 Mobile / Responsive scope confirmation
 - §10 Mobile Design Block (conditional)

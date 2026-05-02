@@ -141,12 +141,10 @@
 
 ### 8.1 Recommended delivery format
 
-- [ ] Overview tile
-- [ ] Flow demo
-- [x] **Hi-fi prototype** (full hi-fi with real data)
-- [ ] Multi-format
+- [ ] `cjm-canvas`
+- [x] **`hi-fi-static`** — single-page landing, 1 screen in §4, 1 primary flow (cold visitor → email capture). All 3 skip-conditions met: ≤2 screens, ≤1 flow, no anon↔authed transitions / multi-state branching.
 
-**Reasoning:** Landing pages live or die on first impression. Need full visual fidelity to evaluate. Single page so no flow demo needed.
+**Reasoning:** Single-page landing, no inter-screen navigation, no auth flow. CJM canvas would be overhead — there's no flow nav to populate, and the only "tweaks" worth exploring (hero layout, pricing layout, typography) work better as a static a/b/c grid than as a sidebar toggle on a single page. Use `cjm-canvas` only if the site grows to ≥3 screens or adds a multi-step signup flow.
 
 ### 8.2 Information density type
 
@@ -179,10 +177,14 @@
 
 ### 8.5 Tweaks worth exposing
 
-- Primary accent color (palette of 4 to swap)
-- Hero layout switcher (the 3 options above)
-- Pricing toggle default (monthly / yearly)
-- Show/hide testimonials section
+- Primary accent color (palette of 4 to swap) [scope: global]
+- Hero layout (text-left + visual / centered single-col / fullscreen video) [scope: S1] — §8.4 DIM 1
+- Pricing presentation (comparison table / 3-card / single-tier-emphasized) [scope: S1] — §8.4 DIM 2
+- Typography pairing (mono+sans / serif+sans / pure-sans) [scope: global] — §8.4 DIM 3
+- Pricing toggle default (monthly / yearly) [scope: S1]
+- Show / hide testimonials section [scope: S1]
+
+(Even though §8.1 = `hi-fi-static`, tweaks still carry `[scope]` tags for forward-compatibility — if the site grows into a multi-screen product later, the tweak metadata is already structured for cjm-canvas conversion.)
 
 ### 8.6 Brand asset checklist
 
@@ -193,9 +195,15 @@
 - [ ] Reference inspiration provided (Linear / Vercel / Plain)
 - [x] **Recommend huashu run §1.a Core Asset Protocol** to collect logo + UI screenshots
 
-### 8.7 Flow vs. overview routing hint
+### 8.7 Canvas construction hint (for huashu)
 
-Hi-fi prototype: huashu generates a single full-fidelity HTML page with all sections, scroll behavior, and interactive states (FAQ expand, pricing toggle, email capture form).
+`hi-fi-static`: single full-fidelity HTML page (React + Babel via CDN, or plain HTML + CSS — huashu's choice based on tweak count). All sections in one scroll: hero → features → how-it-works → social proof → pricing → FAQ → footer. Interactive states: FAQ accordion expand, pricing monthly/yearly toggle, sticky email capture appearing at 60% scroll, email submit success/error.
+
+No CJM sidebar, no flow nav, no alternate-states block — this is a single screen. If huashu wants to expose tweaks (hero / pricing / typography), use a small floating panel (top-right or bottom-right corner), not a full sidebar. No "Copy lock-in prompt" button (round-trip not needed for a single screen — user just edits §8.4 directly).
+
+### 8.8 Lock-in prompt template (for the Copy button)
+
+Not applicable — `hi-fi-static` doesn't include a Copy button. To lock §8.4 picks, the user edits the spec directly or starts a new ux-planner session with feedback. (If the site ever grows past the skip-conditions, switch §8.1 to `cjm-canvas` and this section gets populated.)
 
 ## 9. Open Questions & Assumptions
 
@@ -218,3 +226,15 @@ Hi-fi prototype: huashu generates a single full-fidelity HTML page with all sect
 - Mobile-first responsive breakpoints
 - WCAG 2.1 AA accessibility target
 - Standard cookie banner
+
+### Product Risks
+
+- **Email capture spam / disposable addresses:** lifts vanity numbers but kills downstream activation rate. Mitigation — server-side disposable-domain blocklist + post-submit email verification before granting trial.
+- **Pricing tier confusion:** dev audience reads pricing first; ambiguous tier diff = bounce. Mitigation — feature-comparison table option (§8.4 DIM 2) tested first; FAQ link inline next to tier cards.
+- **Cookie banner annoyance for dev audience:** intrusive banner contradicts "no marketing fluff" voice. Mitigation — minimal one-line bottom banner with single accept + single "essential only" toggle, no nag.
+- **HN/Twitter spike LCP miss:** 3G LCP > 1.5s on launch day = bad first impression. Mitigation — critical CSS inlined, hero image as compressed AVIF + LCP-friendly format fallback, defer below-fold JS.
+- **Pricing page indexability:** SEO needs `/pricing` as a separate URL, but spec says single-page. Mitigation — anchor `#pricing` + history API push when scrolled into view, plus duplicate static `/pricing.html` for crawlers.
+
+### Considered Alternatives (§9.5)
+
+> Empty at first generation. (For `hi-fi-static`, this section is informational only — no Copy-button round-trip exists. If §8.1 is later switched to `cjm-canvas`, this becomes the active landing zone for non-chosen variants.)

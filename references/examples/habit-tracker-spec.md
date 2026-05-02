@@ -272,12 +272,10 @@
 
 ### 8.1 Recommended delivery format
 
-- [x] **Overview tile** (all screens side by side, static)
-- [ ] Flow demo
-- [ ] Hi-fi prototype
-- [ ] Multi-format
+- [x] **`cjm-canvas`** — 7 screens, 3 flows (onboarding / daily logging / review progress), with paywall + auth state branches. Fails all 3 skip-conditions, so cjm-canvas is the right call.
+- [ ] `hi-fi-static`
 
-**Reasoning:** 7 screens, all need to be evaluated for visual consistency. Overview tile shows the system in one view. Flow demo can come later for the logging interaction specifically.
+**Reasoning:** 7 screens with shared visual language and 3 distinct flows. CJM canvas lets the user click through onboarding → home → detail → paywall in one HTML file, toggle streak-viz / color-system / home-layout variants per screen, and copy a lock-in prompt back to Claude when picks settle.
 
 ### 8.2 Information density type
 
@@ -310,10 +308,14 @@
 
 ### 8.5 Tweaks worth exposing
 
-- Theme (light / dark / system)
-- Accent color (5 options)
-- Streak visualization style (flame / ring / calendar)
-- Card density (compact / comfortable / spacious)
+- Theme (light / dark / system) [scope: global]
+- Accent color (5 options) [scope: global]
+- Streak visualization style (flame / ring / calendar) [scope: S1, S2, S4]
+- Card density (compact / comfortable / spacious) [scope: S1, S4]
+- Home layout (list / grid 2-col / hero carousel) [scope: S1] — §8.4 DIM 1
+- Color system (single accent / per-habit / monochrome) [scope: S1, S2, S4] — §8.4 DIM 3
+- Heatmap range on detail (12mo / 6mo / 3mo) [scope: S2]
+- Paywall tier emphasis (yearly highlighted / monthly highlighted / equal) [scope: S7]
 
 ### 8.6 Brand asset checklist
 
@@ -324,9 +326,34 @@
 - [ ] Reference inspiration provided (Streaks, Productive)
 - [x] **Recommend huashu run §1.a Core Asset Protocol** for logo design + reference UI screenshots from competitors
 
-### 8.7 Flow vs. overview routing hint
+### 8.7 Canvas construction hint (for huashu)
 
-Overview tile: huashu uses `assets/ios_frame.jsx` for each of 7 screens, side by side, static. No `AppPhone` state machine needed for v1 — flow demo can come later if user wants to feel the logging interaction.
+cjm-canvas single HTML (React + Babel via CDN). Stage area: iframe-wrapped iPhone frame (use existing `assets/ios_frame.jsx` as reference) for the active screen. Above frame: pill `S<id> · <NAME>`. No browser chrome (mobile app, not web).
+
+Right sidebar (~360px sticky, 4 blocks):
+1. **Tweaks** — filter §8.5 by active screen `[scope]`. Tweaks tagged with `§8.4 DIM <n>` headings render as primary toggle groups; non-DIM tweaks below in a "Polish" section.
+2. **Flow steps** — three flows from §3 (Onboarding / Daily logging / Review progress), each as a numbered list with active step highlighted. Default flow on canvas open = Daily logging starting at S1.
+3. **Alternate states** — sourced from §5 states + §9 risks. Examples:
+   - `S1 Home · Empty (first-launch)` — VARIANT 1
+   - `S1 Home · All done celebration` — VARIANT 2
+   - `S2 Detail · New habit no data` — VARIANT 3
+   - `S7 Paywall · StoreKit error` — VARIANT 4
+   - `Sync conflict banner` — SWAP (overlays any screen)
+4. **Meta footer** — `SOURCE · ux-spec-2026-04-28-habit-tracker.md` / `SYSTEM · — (no design system)` / `DENSITY · HIGH-DENSITY`.
+
+Sticky bottom button: "Copy lock-in prompt" — generates §8.8 prompt with current selections, writes to clipboard.
+
+### 8.8 Lock-in prompt template (for the Copy button)
+
+```
+Lock these design choices into the UX spec at /Users/me/Desktop/projects/habit-tracker/ux-spec-2026-04-28-habit-tracker.md:
+
+Screen <ACTIVE-S-id> · <ACTIVE-SCREEN-NAME>:
+- §8.4 DIM <n> <NAME>: <SELECTED-VARIANT>
+(repeat per active tweak that maps to a §8.4 dimension)
+
+Action: update §8.4 — mark these variants as "locked" for this screen and move non-chosen variants to §9.5 Considered Alternatives. Re-run §6 self-review and regenerate the §8 hand-off phrase.
+```
 
 ## 9. Open Questions & Assumptions
 
@@ -350,3 +377,16 @@ Overview tile: huashu uses `assets/ios_frame.jsx` for each of 7 screens, side by
 - Local storage + optional cloud sync
 - Push notifications as primary re-engagement
 - Long-press to reorder, tap-to-log
+
+### Product Risks
+
+- **CloudKit sync conflicts:** two devices logging same habit on the same day produces duplicate entries or last-write-wins data loss. Mitigation — per-day idempotency key + reconcile on open.
+- **Notification permission denied:** core re-engagement loop dies silently. Mitigation — soft pre-prompt before system dialog + visible "reminders off" banner with 1-tap re-enable from Settings.
+- **Streak break frustration:** missing one day after a long streak triggers user churn. Mitigation — v1.5 streak-recovery feature + soft empathetic copy on detail screen the day after a break.
+- **StoreKit pricing failure:** prices fail to load → paywall is empty → conversion lost. Mitigation — cached price snapshot + retry-on-foreground.
+- **Free→Premium downgrade silently:** user with 8 habits downgrades to free (5-cap) → which 3 to disable? Mitigation — explicit pick-3 modal on downgrade, never auto-truncate.
+- **Notification spam from too many habits:** 5 habits × daily reminders feels noisy. Mitigation — single "today's habits" digest notification at user-chosen time, not per-habit.
+
+### Considered Alternatives (§9.5)
+
+> Empty at first generation. Will populate when the user runs the cjm-canvas Copy button and pastes the lock-in prompt back.
