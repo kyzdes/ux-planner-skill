@@ -1,0 +1,7 @@
+{
+  "name": "ux-planner",
+  "description": "Turn loose product descriptions into structured English UX Specs ready for handoff to a visual-design agent. Hybrid interview + advisor mode for product/feature ideas, vague or detailed.",
+  "author": {
+    "name": "kyzdes"
+  }
+}
