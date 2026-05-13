@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1440" />
+<title>cjm-canvas · UX Planner reference scaffold</title>
+
+<!--
+  ===================================================================
+  UX-PLANNER cjm-canvas REFERENCE SCAFFOLD · v1.3-correct
+
+  Source spec: <ABS-PATH-TO-ux-spec-YYYY-MM-DD-product.md>
+  Generated from: skills/ux-planner/assets/canvas-scaffold.html
+
+  HOW TO USE (huashu):
+    1. Replace SPEC_PATH, PRODUCT_DOMAIN, DESIGN_SYSTEM, DENSITY at the
+       top of the <script> block with values from §1 / §7 / §8.2.
+    2. Replace SCREENS, TWEAKS, ALT_STATES, FLOW_STEPS arrays with
+       content derived from §4 / §8.5 / §5 states / §3.
+    3. Replace the ScreenPreview component body with real JSX per
+       screen (driven by §5 Per-Screen Briefs).
+    4. DO NOT change the state model (tweakState + touchedKeys),
+       the buildLockInPrompt accumulator, or the CopyLockInButton
+       counter logic — these implement v1.3 multi-screen behavior.
+    5. Open the file directly in a browser — it works on file://
+       thanks to the document.execCommand('copy') clipboard fallback.
+
+  Every block that needs product-specific content is marked
+  // HUASHU: REPLACE or // HUASHU: extend.  Everything else is
+  load-bearing canvas-shell logic.
+  ===================================================================
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+
+<style>
+  :root {
+    --shell-bg: #0E0D0C;
+    --stage-bg: #14130F;
+    --sidebar-bg: #18161A;
+    --sidebar-edge: #2A2528;
+    --sidebar-ink: #E8E5E0;
+    --sidebar-muted: #8C8579;
+    --sidebar-dim: #4E4A46;
+    --accent: #E47A5C;
+    --accent-dim: #A04D38;
+    --chrome-bg: #2E2A26;
+    --chrome-edge: #3D3833;
+    --chrome-text: #B5AFA5;
+    --screen-bg: #F5EFE6;
+    --screen-ink: #1A1714;
+    --screen-muted: #5C5851;
+    --touched: #6FA37A;
+
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--shell-bg);
+    color: var(--sidebar-ink);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+    height: 100vh;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  code { font-family: var(--mono); font-size: 12px; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2D2A26; border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3D3833; }
+
+  /* =============== SHELL =============== */
+
+  .canvas-shell {
+    display: grid;
+    grid-template-columns: 1fr 384px;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* =============== STAGE =============== */
+
+  .stage {
+    background: var(--stage-bg);
+    overflow-y: auto;
+    padding: 32px 40px 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .stage-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1280px;
+    gap: 16px;
+  }
+
+  .section-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: #1A1816;
+    border: 1px solid var(--sidebar-edge);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sidebar-ink);
+  }
+  .section-pill .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(228, 122, 92, 0.18);
+  }
+  .section-pill .pill-name { color: var(--sidebar-muted); }
+  .section-pill .alt-tag { color: var(--accent); margin-left: 6px; }
+
+  /* browser chrome */
+  .browser-chrome {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: var(--chrome-bg);
+    border: 1px solid var(--chrome-edge);
+    border-radius: 10px 10px 0 0;
+    width: 100%;
+    max-width: 1280px;
+  }
+  .traffic-lights { display: flex; gap: 7px; }
+  .traffic-lights span {
+    width: 12px; height: 12px; border-radius: 50%;
+    display: inline-block;
+  }
+  .tl-red { background: #FF5F57; }
+  .tl-yellow { background: #FFBD2E; }
+  .tl-green { background: #28C840; }
+  .url-bar {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #1A1816;
+    border: 1px solid var(--chrome-edge);
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--chrome-text);
+  }
+  .url-bar .lock { font-size: 11px; }
+  .url-bar .domain { color: var(--sidebar-ink); }
+  .url-bar .anchor { color: var(--accent-dim); }
+
+  .screen-frame {
+    width: 100%;
+    max-width: 1280px;
+    min-height: 600px;
+    background: var(--screen-bg);
+    color: var(--screen-ink);
+    border: 1px solid var(--chrome-edge);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 48px;
+    overflow: hidden;
+  }
+
+  /* =============== SCREEN PREVIEW PLACEHOLDER =============== */
+
+  .screen-placeholder { font-family: var(--sans); }
+  .ph-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .ph-title { margin: 0 0 8px; font-size: 32px; font-weight: 600; }
+  .ph-meta { color: var(--screen-muted); font-size: 13px; margin-bottom: 24px; }
+  .ph-tweaks {
+    background: rgba(255,255,255,0.5);
+    border: 1px dashed rgba(0,0,0,0.15);
+    padding: 18px 22px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .ph-tweaks ul { margin: 8px 0 0; padding-left: 20px; }
+  .ph-tweaks code {
+    background: rgba(0,0,0,0.07);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .ph-alt {
+    margin-top: 24px;
+    padding: 12px 18px;
+    background: #FFE6DC;
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--accent-dim);
+    font-weight: 500;
+  }
+
+  /* =============== SIDEBAR =============== */
+
+  .sidebar {
+    background: var(--sidebar-bg);
+    border-left: 1px solid var(--sidebar-edge);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 22px 20px;
+  }
+
+  .sidebar-header { margin-bottom: 20px; }
+  .sidebar-header .eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--sidebar-muted);
+    margin-bottom: 10px;
+  }
+  .sidebar-header h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--sidebar-ink);
+  }
+  .sidebar-header .subtitle {
+    color: var(--sidebar-muted);
+    font-size: 12px;
+  }
+
+  .block { margin-bottom: 24px; }
+  .block-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sidebar-ink);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--sidebar-edge);
+  }
+  .block-title .count {
+    color: var(--sidebar-dim);
+    font-weight: 500;
+  }
+  .block-subtitle {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sidebar-muted);
+    margin: 16px 0 10px;
+    opacity: 0.75;
+  }
+
+  /* tweaks */
+  .tweak-group { margin-bottom: 14px; }
+  .tg-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--sidebar-ink);
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .tg-dim {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent-dim);
+    background: rgba(228, 122, 92, 0.1);
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+  }
+  .tg-touched {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--touched);
+    letter-spacing: 0.06em;
+  }
+  .tg-scope {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--sidebar-dim);
+    margin-bottom: 6px;
+  }
+  .tweak-options {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .tweak-options button {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px;
+    background: #1F1D22;
+    border: 1px solid var(--sidebar-edge);
+    color: var(--sidebar-muted);
+    border-radius: 5px;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    transition: all 0.15s;
+  }
+  .tweak-options button:hover { color: var(--sidebar-ink); }
+  .tweak-options button.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1A1714;
+    font-weight: 600;
+  }
+
+  /* flow steps */
+  .flow-steps { display: flex; flex-direction: column; gap: 4px; }
+  .flow-step {
+    display: grid;
+    grid-template-columns: 16px 32px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    text-align: left;
+    color: var(--sidebar-muted);
+    transition: all 0.15s;
+  }
+  .flow-step:hover { color: var(--sidebar-ink); background: rgba(255,255,255,0.02); }
+  .flow-step.active {
+    background: rgba(228, 122, 92, 0.08);
+    border-color: rgba(228, 122, 92, 0.3);
+    color: var(--sidebar-ink);
+  }
+  .step-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--sidebar-dim);
+    margin-left: 4px;
+  }
+  .flow-step.active .step-dot { background: var(--accent); box-shadow: 0 0 0 3px rgba(228, 122, 92, 0.18); }
+  .step-id { font-family: var(--mono); font-size: 11px; color: var(--sidebar-dim); }
+  .flow-step.active .step-id { color: var(--accent); }
+  .step-name { font-size: 12px; }
+  .step-role { font-family: var(--mono); font-size: 10px; color: var(--sidebar-dim); letter-spacing: 0.06em; }
+
+  /* alt states */
+  .alt-states { display: flex; flex-direction: column; gap: 6px; }
+  .alt-state {
+    text-align: left;
+    background: transparent;
+    border: 1px solid var(--sidebar-edge);
+    border-radius: 6px;
+    padding: 9px 11px;
+    color: var(--sidebar-muted);
+    transition: all 0.15s;
+  }
+  .alt-state:hover { color: var(--sidebar-ink); border-color: var(--sidebar-muted); }
+  .alt-state.active { border-color: var(--accent); background: rgba(228, 122, 92, 0.07); color: var(--sidebar-ink); }
+  .as-head { display: flex; gap: 6px; align-items: baseline; margin-bottom: 3px; font-size: 12px; }
+  .as-section { font-family: var(--mono); font-size: 10px; color: var(--sidebar-dim); }
+  .as-name { font-weight: 500; }
+  .as-detail { font-size: 11px; color: var(--sidebar-dim); line-height: 1.4; }
+
+  /* meta footer */
+  .meta-footer {
+    padding: 12px 0 4px;
+    border-top: 1px solid var(--sidebar-edge);
+    margin-top: 18px;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--sidebar-dim);
+    padding: 3px 0;
+    letter-spacing: 0.08em;
+  }
+  .meta-row .key { color: var(--sidebar-muted); }
+  .meta-row .val { color: var(--sidebar-ink); }
+
+  /* copy bar */
+  .copy-bar {
+    padding: 14px 18px 16px;
+    background: #131115;
+    border-top: 1px solid var(--sidebar-edge);
+  }
+  .copy-btn {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--accent);
+    color: #1A1714;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: #F08869; }
+  .copy-btn.empty {
+    background: #2A2528;
+    color: var(--sidebar-dim);
+    cursor: not-allowed;
+  }
+  .copy-btn.empty:hover { background: #2A2528; }
+  .copy-btn.copied { background: var(--touched); color: #0E1F12; }
+  .copy-help {
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--sidebar-dim);
+    line-height: 1.4;
+    letter-spacing: 0.04em;
+  }
+
+  /* toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--sidebar-ink);
+    color: #1A1714;
+    padding: 11px 22px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    z-index: 9999;
+    font-family: var(--mono);
+    letter-spacing: 0.02em;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect, useCallback } = React;
+
+/* ============================================================
+   SPEC METADATA · HUASHU: REPLACE WITH VALUES FROM SPEC §1 / §7 / §8.2
+   ============================================================ */
+const SPEC_PATH = '/absolute/path/to/ux-spec-YYYY-MM-DD-product.md';
+const PRODUCT_DOMAIN = 'example.com/';
+const DESIGN_SYSTEM = '—';
+const DENSITY = 'RESTRAINED'; // 'RESTRAINED' | 'HIGH-DENSITY'
+
+/* ============================================================
+   SCREENS · HUASHU: REPLACE — mirror §4 Screen Inventory
+   ============================================================ */
+const SCREENS = [
+  { id: 'S1', name: 'Home',   role: 'hero',       anchor: '' },
+  { id: 'S2', name: 'Detail', role: 'data',       anchor: 'detail/123' },
+  { id: 'S3', name: 'Settings', role: 'end',      anchor: 'settings' },
+];
+
+/* ============================================================
+   TWEAKS · HUASHU: REPLACE — mirror §8.5 (every entry MUST have a scope)
+   - scope: ['global']  → applies everywhere, shown on every screen
+   - scope: ['S1', 'S2'] → applies only when those screens are active
+   - dim: <n>           → cross-reference §8.4 dimension number (optional)
+   ============================================================ */
+const TWEAKS = [
+  {
+    id: 'primary-color',
+    label: 'Primary color',
+    scope: ['global'],
+    dim: 1,
+    options: [{ v: 'rust', l: 'Rust' }, { v: 'teal', l: 'Teal' }, { v: 'charcoal', l: 'Charcoal' }],
+    default: 'rust',
+  },
+  {
+    id: 'global-density',
+    label: 'Density',
+    scope: ['global'],
+    dim: 2,
+    options: [{ v: 'compact', l: 'Compact' }, { v: 'comfortable', l: 'Comfortable' }, { v: 'spacious', l: 'Spacious' }],
+    default: 'comfortable',
+  },
+  {
+    id: 'home-layout',
+    label: 'Home layout',
+    scope: ['S1'],
+    dim: 3,
+    options: [{ v: 'list', l: 'List' }, { v: 'grid', l: 'Grid' }, { v: 'calendar', l: 'Calendar' }],
+    default: 'list',
+  },
+  {
+    id: 'detail-pane',
+    label: 'Detail pane',
+    scope: ['S2'],
+    options: [{ v: 'push', l: 'Push' }, { v: 'modal', l: 'Modal' }, { v: 'side', l: 'Side panel' }],
+    default: 'push',
+  },
+  {
+    id: 'settings-ia',
+    label: 'Settings IA',
+    scope: ['S3'],
+    options: [{ v: 'flat', l: 'Flat list' }, { v: 'grouped', l: 'Grouped' }, { v: 'tabbed', l: 'Tabbed' }],
+    default: 'grouped',
+  },
+];
+
+/* ============================================================
+   ALT STATES · HUASHU: REPLACE — mirror §5 non-success states + §9.4 risks
+   ============================================================ */
+const ALT_STATES = [
+  { id: 'empty-S1', screen: 'S1', name: 'Empty state',  detail: 'No data yet — CTA to add first item' },
+  { id: 'error-S2', screen: 'S2', name: 'Load error',   detail: 'Network failed — inline retry available' },
+  { id: 'saved-S3', screen: 'S3', name: 'Saved toast',  detail: 'Settings change confirmed inline' },
+];
+
+/* ============================================================
+   FLOW · HUASHU: REPLACE — mirror §3 primary flow steps
+   For multi-flow products, replace with the flow you want to visualize first
+   ============================================================ */
+const FLOW_STEPS = SCREENS;
+
+/* ============================================================
+   STATE HELPERS · v1.3 cross-screen accumulator
+   DO NOT CHANGE this section unless you understand the §8.7 contract
+   ============================================================ */
+
+function tweakKey(tweak) {
+  return tweak.scope.join(',') + '|' + tweak.id;
+}
+
+function initialTweakState() {
+  const s = {};
+  for (const t of TWEAKS) s[t.id] = t.default;
+  return s;
+}
+
+function tweaksForScreen(screenId) {
+  return TWEAKS.filter(t => t.scope.includes('global') || t.scope.includes(screenId));
+}
+
+function valueLabel(tweak, v) {
+  const opt = tweak.options.find(o => o.v === v);
+  return opt ? opt.l : v;
+}
+
+function countDistinctScreenScopes(touchedKeys) {
+  // counts SCREEN scopes only — 'global' is its own bucket, not a "screen"
+  const screens = new Set();
+  for (const t of TWEAKS) {
+    if (!touchedKeys.has(tweakKey(t))) continue;
+    for (const s of t.scope) {
+      if (s !== 'global') screens.add(s);
+    }
+  }
+  return screens.size;
+}
+
+/* ============================================================
+   LOCK-IN PROMPT · v1.3 multi-block (§8.8)
+   - Emit optional Global: block first
+   - Then one Screen Sx · Name: block per screen with touched picks
+   - Screens ordered by S-id ascending
+   - Within each block: §8.5 declaration order
+   - Skip blocks with zero touched keys
+   ============================================================ */
+
+function buildLockInPrompt(touchedKeys, tweakState) {
+  const global = [];
+  const perScreen = {};
+
+  for (const t of TWEAKS) {
+    if (!touchedKeys.has(tweakKey(t))) continue;
+    const v = valueLabel(t, tweakState[t.id]);
+    const head = t.dim != null ? `§8.4 DIM ${t.dim} ${t.label}` : t.label;
+    const line = `- ${head}: ${v}`;
+    if (t.scope.includes('global')) {
+      global.push(line);
+    } else {
+      for (const sid of t.scope) {
+        if (!perScreen[sid]) perScreen[sid] = [];
+        perScreen[sid].push(line);
+      }
+    }
+  }
+
+  const parts = [`Lock these design choices into the UX spec at ${SPEC_PATH}:`, ''];
+
+  if (global.length > 0) {
+    parts.push('Global:');
+    parts.push(...global);
+    parts.push('');
+  }
+
+  for (const sid of Object.keys(perScreen).sort()) {
+    const screen = SCREENS.find(s => s.id === sid);
+    const name = screen ? screen.name : sid;
+    parts.push(`Screen ${sid} · ${name}:`);
+    parts.push(...perScreen[sid]);
+    parts.push('');
+  }
+
+  parts.push(
+    'Action: update §8.4 — mark these variants as "locked" (globally for Global block, per-screen for Screen blocks) ' +
+    'and move non-chosen variants to §9.5 Considered Alternatives. ' +
+    'If the same DIM is locked to different variants across blocks, do NOT lock — record the conflict in §9.5 ' +
+    'and surface it back to the user. Re-run §6 self-review and regenerate the §8 hand-off phrase.'
+  );
+
+  return parts.join('\n');
+}
+
+/* ============================================================
+   COMPONENTS
+   ============================================================ */
+
+function TweaksPanel({ activeScreenId, tweakState, setTweakState, touchedKeys, setTouchedKeys }) {
+  const visible = tweaksForScreen(activeScreenId);
+  const sectionScoped = visible.filter(t => !t.scope.includes('global'));
+  const globalScoped = visible.filter(t => t.scope.includes('global'));
+
+  const toggle = (tweak, value) => {
+    setTweakState(s => ({ ...s, [tweak.id]: value }));
+    setTouchedKeys(prev => {
+      const next = new Set(prev);
+      next.add(tweakKey(tweak));
+      return next;
+    });
+  };
+
+  const renderGroup = (t) => {
+    const touched = touchedKeys.has(tweakKey(t));
+    return (
+      <div key={t.id} className="tweak-group">
+        <div className="tg-label">
+          {t.dim != null && <span className="tg-dim">§8.4 DIM {t.dim}</span>}
+          <span>{t.label}</span>
+          {touched && <span className="tg-touched">· touched</span>}
+        </div>
+        <div className="tg-scope">scope: {t.scope.join(', ')}</div>
+        <div className="tweak-options">
+          {t.options.map(opt => (
+            <button
+              key={opt.v}
+              className={tweakState[t.id] === opt.v ? 'selected' : ''}
+              onClick={() => toggle(t, opt.v)}
+            >
+              {opt.l}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="block">
+      <div className="block-title">
+        <span>Tweaks · filtered for {activeScreenId}</span>
+        <span className="count">{visible.length}</span>
+      </div>
+      {sectionScoped.map(renderGroup)}
+      {globalScoped.length > 0 && (
+        <>
+          <div className="block-subtitle">Global (apply across all screens)</div>
+          {globalScoped.map(renderGroup)}
+        </>
+      )}
+    </div>
+  );
+}
+
+function FlowStepsPanel({ activeScreenId, onPickScreen }) {
+  return (
+    <div className="block">
+      <div className="block-title">
+        <span>Flow steps</span>
+        <span className="count">{FLOW_STEPS.length}</span>
+      </div>
+      <div className="flow-steps">
+        {FLOW_STEPS.map(s => (
+          <button
+            key={s.id}
+            className={`flow-step ${s.id === activeScreenId ? 'active' : ''}`}
+            onClick={() => onPickScreen(s.id)}
+          >
+            <span className="step-dot" />
+            <span className="step-id">{s.id}</span>
+            <span className="step-name">{s.name}</span>
+            <span className="step-role">{s.role}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AlternateStatesPanel({ activeAltState, setActiveAltState, setActiveScreenId }) {
+  return (
+    <div className="block">
+      <div className="block-title">
+        <span>Alternate states</span>
+        <span className="count">{ALT_STATES.length}</span>
+      </div>
+      <div className="alt-states">
+        {ALT_STATES.map(a => (
+          <button
+            key={a.id}
+            className={`alt-state ${activeAltState === a.id ? 'active' : ''}`}
+            onClick={() => {
+              setActiveScreenId(a.screen);
+              setActiveAltState(activeAltState === a.id ? null : a.id);
+            }}
+          >
+            <div className="as-head">
+              <span className="as-section">{a.screen} ·</span>
+              <span className="as-name">{a.name}</span>
+            </div>
+            <div className="as-detail">{a.detail}</div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MetaFooter() {
+  const sourceName = SPEC_PATH.split('/').pop();
+  return (
+    <div className="meta-footer">
+      <div className="meta-row"><span className="key">SOURCE</span><span className="val">{sourceName}</span></div>
+      <div className="meta-row"><span className="key">SYSTEM</span><span className="val">{DESIGN_SYSTEM}</span></div>
+      <div className="meta-row"><span className="key">DENSITY</span><span className="val">{DENSITY}</span></div>
+    </div>
+  );
+}
+
+function CopyLockInButton({ touchedKeys, tweakState, onToast }) {
+  const [copied, setCopied] = useState(false);
+  const count = touchedKeys.size;
+  const screens = countDistinctScreenScopes(touchedKeys);
+  const empty = count === 0;
+
+  const handleCopy = async () => {
+    if (empty) {
+      onToast('Pick at least one tweak before copying');
+      return;
+    }
+    const text = buildLockInPrompt(touchedKeys, tweakState);
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    } catch (e) {
+      // file:// permission fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        ok = document.execCommand('copy');
+      } catch (err) { ok = false; }
+      document.body.removeChild(ta);
+    }
+    if (!ok) {
+      alert('Clipboard blocked. Copy this manually:\n\n' + text);
+      return;
+    }
+    setCopied(true);
+    onToast(`Copied · ${count} picks across ${screens} screens`);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const label = empty
+    ? 'Copy lock-in prompt · no picks yet'
+    : `Copy lock-in prompt · ${count} picks across ${screens} screens`;
+
+  return (
+    <div className="copy-bar">
+      <button
+        className={`copy-btn ${copied ? 'copied' : ''} ${empty ? 'empty' : ''}`}
+        onClick={handleCopy}
+      >
+        {copied ? '✓ Copied to clipboard' : label}
+      </button>
+      <div className="copy-help">
+        Picks persist across screens · one Copy = whole iteration locked back into §8.4
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   SCREEN PREVIEW · HUASHU: REPLACE BODY with real product JSX
+   The placeholder below is intentionally generic so the scaffold
+   runs out of the box. Build per-screen JSX from §5 briefs.
+   ============================================================ */
+
+function ScreenPreview({ activeScreenId, tweaks, altState }) {
+  const screen = SCREENS.find(s => s.id === activeScreenId);
+  if (!screen) return null;
+  const visibleTweaks = tweaksForScreen(activeScreenId);
+  const alt = altState ? ALT_STATES.find(a => a.id === altState) : null;
+
+  return (
+    <div className="screen-placeholder">
+      <div className="ph-eyebrow">[ HUASHU: REPLACE with §5 brief for {activeScreenId} ]</div>
+      <h1 className="ph-title">{screen.name}</h1>
+      <div className="ph-meta">narrative role: {screen.role} · scope-filtered tweaks below</div>
+      <div className="ph-tweaks">
+        <strong>Active tweak values on this screen:</strong>
+        <ul>
+          {visibleTweaks.map(t => (
+            <li key={t.id}>
+              {t.label} <code>[{t.scope.join(', ')}]</code>: <code>{valueLabel(t, tweaks[t.id])}</code>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {alt && (
+        <div className="ph-alt">
+          ALT STATE: {alt.name} — {alt.detail}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   APP SHELL · canvas-shell logic, DO NOT REWRITE
+   ============================================================ */
+
+function App() {
+  const [activeScreenId, setActiveScreenId] = useState(SCREENS[0].id);
+  const [tweakState, setTweakState] = useState(initialTweakState);
+  const [touchedKeys, setTouchedKeys] = useState(new Set());
+  const [altState, setAltState] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (!altState) return;
+    const a = ALT_STATES.find(x => x.id === altState);
+    if (a && a.screen !== activeScreenId) setAltState(null);
+  }, [activeScreenId, altState]);
+
+  const showToast = useCallback((msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  }, []);
+
+  const onPickScreen = (id) => {
+    setActiveScreenId(id);
+    setAltState(null);
+  };
+
+  const screen = SCREENS.find(s => s.id === activeScreenId);
+
+  return (
+    <div className="canvas-shell">
+      <div className="stage">
+        <div className="stage-topbar">
+          <div className="section-pill">
+            <span className="dot" />
+            <span>{activeScreenId}</span>
+            <span className="pill-name">· {screen.name}</span>
+            {altState && (
+              <span className="alt-tag">
+                · {ALT_STATES.find(a => a.id === altState)?.name}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="browser-chrome">
+          <div className="traffic-lights">
+            <span className="tl-red" /><span className="tl-yellow" /><span className="tl-green" />
+          </div>
+          <div className="url-bar">
+            <span className="lock">🔒</span>
+            <span className="domain">{PRODUCT_DOMAIN}</span>
+            <span className="anchor">{screen.anchor}</span>
+          </div>
+        </div>
+
+        <div className="screen-frame">
+          <ScreenPreview activeScreenId={activeScreenId} tweaks={tweakState} altState={altState} />
+        </div>
+      </div>
+
+      <aside className="sidebar">
+        <div className="sidebar-scroll">
+          <div className="sidebar-header">
+            <div className="eyebrow">cjm-canvas · ux-planner reference scaffold v1.3</div>
+            <h1>Scaffold</h1>
+            <div className="subtitle">
+              {SCREENS.length} screens · {TWEAKS.length} tweaks · density: {DENSITY.toLowerCase()}
+            </div>
+          </div>
+
+          <TweaksPanel
+            activeScreenId={activeScreenId}
+            tweakState={tweakState}
+            setTweakState={setTweakState}
+            touchedKeys={touchedKeys}
+            setTouchedKeys={setTouchedKeys}
+          />
+
+          <FlowStepsPanel
+            activeScreenId={activeScreenId}
+            onPickScreen={onPickScreen}
+          />
+
+          <AlternateStatesPanel
+            activeAltState={altState}
+            setActiveAltState={setAltState}
+            setActiveScreenId={setActiveScreenId}
+          />
+
+          <MetaFooter />
+        </div>
+
+        <CopyLockInButton
+          touchedKeys={touchedKeys}
+          tweakState={tweakState}
+          onToast={showToast}
+        />
+      </aside>
+
+      {toast && <div className="toast">{toast}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

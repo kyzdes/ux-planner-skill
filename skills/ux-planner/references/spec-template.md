@@ -1,5 +1,18 @@
 # UX Spec Template
 
+## Contents
+
+- [Filename](#filename) — naming convention for saved specs
+- [Template](#template-copy-this-structure-verbatim) — verbatim spec structure
+  - §1 Product Framing · §2 Functional Scope · §3 User Flows
+  - §4 Screen Inventory · §5 Per-Screen Briefs · §6 Constraints & Context
+  - §7 Design Context · §8 Hand-off to huashu-design (§8.1–§8.8)
+  - §9 Open Questions & Assumptions (§9.4 Risks, §9.5 Alternatives)
+  - §10 Mobile / Responsive Design Block (conditional)
+- [Field-by-field guidance](#field-by-field-guidance) — per-section rationale and gotchas
+
+---
+
 This is the exact markdown structure of the output. All 9 sections must be present (10 if mobile track active). Empty sections are forbidden — fill, infer, or move the gap to §9 "Open questions". §9.5 Considered Alternatives is the only deliberately-empty subsection at first generation (it's the round-trip target for the cjm-canvas Copy button).
 
 The spec is **always English**, regardless of input language.
@@ -195,6 +208,8 @@ Parameters huashu should make live-tunable in the prototype. Each tweak MUST be 
 
 ### 8.7 Canvas construction hint (for huashu)
 
+> **Reference scaffold:** `skills/ux-planner/assets/canvas-scaffold.html` ships a working v1.3-correct canvas with cross-screen `tweakState`, `touchedKeys` tracking, multi-block `buildLockInPrompt`, live counter badge, empty-state toast, and a `file://` clipboard fallback. Huashu SHOULD start from this scaffold and replace the `// HUASHU: REPLACE` blocks with product-specific JSX from §1–§9. Reinventing the canvas shell from scratch loses subtle v1.3 behaviors (e.g., touched-only emission, conflict-safe Copy).
+
 If §8.1 = `cjm-canvas`, huashu MUST produce a single HTML file (React + Babel via CDN, no build step) with this structure:
 
 **Layout:**
@@ -204,28 +219,58 @@ If §8.1 = `cjm-canvas`, huashu MUST produce a single HTML file (React + Babel v
   2. **Flow steps** — numbered list of the active CJM flow from §3. Active step is highlighted (filled dot + accent text); inactive steps muted. Clicking a step swaps the active screen in the canvas (and the sidebar re-filters tweaks accordingly).
   3. **Alternate states** — corner-case states / variant swaps reachable from any step. Source: §5 states (non-success branches) + §9 risks. Each row labeled `<screen> · <state>` with a `VARIANT N` or `SWAP` tag.
   4. **Meta footer** — three lines: `SOURCE · ux-spec-<date>-<slug>.md`, `SYSTEM · <design-system from §7 or "—">`, `DENSITY · <RESTRAINED | HIGH-DENSITY>`.
-- **"Copy lock-in prompt" button** — sticky at the bottom of the sidebar. On click, assembles the lock-in prompt (see §8.8) from current tweak selections and writes to clipboard via `navigator.clipboard.writeText`. Show a 2s "Copied" toast / inline confirmation.
+- **"Copy lock-in prompt" button** — sticky at the bottom of the sidebar. Accumulates the user's picks **across every screen they touched in this session** and writes a single merged prompt to clipboard via `navigator.clipboard.writeText`. Show a 2s "Copied · N picks across M screens" toast on success.
 
-**State management:** all tweak picks held in React state. Switching screen via flow-step click updates active screen + re-filters tweaks. No page reload, no router.
+**Cross-screen state management (mandatory):**
+
+- All tweak picks are held in a single React state object keyed by `<scope>|<tweak-label>` (e.g., `global|Primary color`, `S2|Save-bar position`). State persists when the user navigates between screens via flow-step clicks — switching screens MUST NOT clear picks made on other screens.
+- Maintain a `touchedKeys` Set tracking which `<scope>|<tweak-label>` entries the user has explicitly clicked at least once. Tweaks the user never touched (still at their default) MUST NOT appear in the lock-in prompt — only explicit picks are accumulated.
+- Sidebar tweak block continues to render only the active screen's scoped tweaks (filter behavior unchanged). The accumulator runs only at Copy time.
+
+**Copy button UX:**
+
+- Button label includes a live counter: `Copy lock-in prompt · <N> picks across <M> screens` (where N = `touchedKeys.size`, M = number of distinct screen scopes among touched keys, with `global` counted as its own "scope" but not a screen for the M count).
+- If `touchedKeys.size === 0`: button is visually muted and on click shows a toast `Pick at least one tweak before copying` instead of writing to clipboard.
+- After successful copy: 2s toast `Copied · N picks across M screens`.
+- Optional secondary affordance: a tiny `Reset` text-link below the button that clears `touchedKeys` + resets state to defaults (no confirm dialog — fast iteration is the point). Not required, include only if it fits the sidebar visually.
+
+**No page reload, no router.** Switching screens via flow-step click only updates `activeScreenId` + re-filters the sidebar tweak list.
 
 If §8.1 = `hi-fi-static`, huashu produces a single full-fidelity screen with no canvas chrome, no sidebar, no flow nav. Tweaks (if any) sit in a small floating panel; no clipboard prompt button.
 
 ### 8.8 Lock-in prompt template (for the cjm-canvas Copy button)
 
-The Copy button assembles this exact prompt and writes it to clipboard. Variables resolve from current state:
+The Copy button accumulates **every tweak the user explicitly touched across every screen they visited** and assembles a single merged prompt. One Copy click = one paste = the whole iteration. The template:
 
 ```
 Lock these design choices into the UX spec at <ABS-PATH-FROM-§8.1-METADATA>:
 
-Screen <ACTIVE-S-id> · <ACTIVE-SCREEN-NAME>:
+Global:
 - §8.4 DIM <n> <NAME>: <SELECTED-VARIANT>
-- §8.4 DIM <n> <NAME>: <SELECTED-VARIANT>
-(repeat per active tweak)
+- <Tweak label>: <SELECTED-VARIANT>
+(emit one line per touched key whose [scope] is `global`)
 
-Action: update §8.4 — mark these variants as "locked" for this screen and move non-chosen variants to §9.5 Considered Alternatives. Re-run §6 self-review and regenerate the §8 hand-off phrase.
+Screen <S-id-A> · <SCREEN-NAME-A>:
+- §8.4 DIM <n> <NAME>: <SELECTED-VARIANT>
+- <Tweak label>: <SELECTED-VARIANT>
+(emit one line per touched key whose [scope] includes S-id-A)
+
+Screen <S-id-B> · <SCREEN-NAME-B>:
+- <Tweak label>: <SELECTED-VARIANT>
+(repeat one block per screen the user touched, in S-id order)
+
+Action: update §8.4 — mark these variants as "locked" (globally for Global block, per-screen for Screen blocks) and move non-chosen variants to §9.5 Considered Alternatives. If the same DIM is locked to different variants across blocks, do NOT lock — record the conflict in §9.5 and surface it back to the user. Re-run §6 self-review and regenerate the §8 hand-off phrase.
 ```
 
-The absolute path of the spec must be embedded into the canvas as a constant (huashu reads it from the user's hand-off message). If the user moves the spec, they re-run the hand-off phrase to regenerate the canvas with the new path.
+**Emission rules:**
+
+- Omit the `Global:` block entirely if no global tweaks were touched. Same for any Screen block.
+- If `touchedKeys.size === 0`, the Copy button does NOT emit a prompt (see §8.7 empty-state toast).
+- Screen blocks are ordered by §4 S-id (ascending), not by visit order.
+- Within a block, lines preserve the §8.5 declaration order.
+- The absolute path of the spec must be embedded into the canvas as a constant (huashu reads it from the user's hand-off message). If the user moves the spec, they re-run the hand-off phrase to regenerate the canvas with the new path.
+
+**Backwards compatibility:** an older single-screen prompt (no `Global:` block, only one `Screen Sx · Name:` block) remains a valid input to Phase 7.5 of this skill. Canvases generated before v1.3 still emit the legacy single-screen format and continue to work. New canvases (v1.3+) MUST emit the multi-block format described above.
 
 ## 9. Open Questions & Assumptions
 

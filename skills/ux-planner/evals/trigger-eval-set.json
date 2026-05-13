@@ -1,0 +1,74 @@
+[
+  {
+    "query": "хочу приложение для трекинга прочитанных книг — чтобы был ежедневный счётчик страниц, стрики, и можно было ставить цель на месяц. что обычно делают в таких приложениях, не знаю с чего начать",
+    "should_trigger": true
+  },
+  {
+    "query": "make me a saas dashboard for monitoring my shopify store — orders today, revenue by hour, refund rate, top products. I have like 6 collections, multi-warehouse. budget is tight, no design system",
+    "should_trigger": true
+  },
+  {
+    "query": "придумай интерфейс для онлайн-записи к врачу — поиск по специальности, выбор слота, оплата картой, смс-верификация. это будет и веб и мобильное приложение, надо думать про оба",
+    "should_trigger": true
+  },
+  {
+    "query": "I need a UX spec for an internal admin tool — moderation queue, refund interface, user role management. it's for a 12-person ops team, they'll live in it 8 hrs/day. high-density",
+    "should_trigger": true
+  },
+  {
+    "query": "помоги придумать сервис для подбора репетиторов — родители ищут учителя по предмету, городу, цене, рейтингу. сделай мне как-нибудь продумано, с какими экранами, какие фичи в v1",
+    "should_trigger": true
+  },
+  {
+    "query": "design a landing page for an AI code-review tool, target audience = senior backend engineers (kind of Linear/Vercel/Plain vibe). need hero, features grid, pricing 3 tiers, FAQ. dev audience hates marketing fluff",
+    "should_trigger": true
+  },
+  {
+    "query": "продумай экраны для браузерного расширения которое определяет фейковые отзывы на маркетплейсах. popup-окно при клике, страница настроек, индикатор в самой карточке товара на сайте. chrome + firefox",
+    "should_trigger": true
+  },
+  {
+    "query": "want a feature spec for an investment portfolio tracker — connect to robinhood / IBKR via plaid, daily P&L, allocation pie, rebalance suggestions. for retail investors, mobile-first but with a web companion",
+    "should_trigger": true
+  },
+  {
+    "query": "хочу dashboard для команды поддержки — open tickets, среднее время ответа, escalation rate, чарт по агентам. подключение к zendesk через webhook. думаю про роли admin/agent/viewer",
+    "should_trigger": true
+  },
+  {
+    "query": "сделай красивый UI для формы регистрации которая у меня уже есть. вот ссылка на текущую версию figma.com/file/abc — просто хочу чтобы выглядело свежее, более 2026",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши на python код для авторизации через google oauth — мне в свой fastapi бек нужна интеграция, верификация id_token, сохранение пользователя в postgres",
+    "should_trigger": false
+  },
+  {
+    "query": "translate my landing page copy to spanish, all 7 sections. tone should match the english original (informal-formal mix). I have the markdown source",
+    "should_trigger": false
+  },
+  {
+    "query": "у меня баг в навигации на сайте — на iphone safari при скролле header вообще исчезает, а должен sticky. проверь что не так в css",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши unit-тесты на pytest для функции calculate_tax_with_discount(amount, country_code, discount_pct). покрой edge-кейсы: discount > 100%, negative amount, unknown country",
+    "should_trigger": false
+  },
+  {
+    "query": "придумай нейминг для моего стартапа — мы делаем платформу для краудфандинга независимого кино, аудитория европейская, премиум-сегмент. 5 вариантов с обоснованием",
+    "should_trigger": false
+  },
+  {
+    "query": "make this button more accessible — it's missing aria-label and the contrast is bad on hover. it's the primary CTA on the pricing page. give me the patched JSX",
+    "should_trigger": false
+  },
+  {
+    "query": "write me a PRD for the Q3 roadmap of our notification system — business case, success metrics, scope, dependencies, risks, timeline. our exec team needs to sign off next week",
+    "should_trigger": false
+  },
+  {
+    "query": "что лучше для моего проекта — REST или GraphQL? backend на node + postgres, фронт react, мобильный клиент в перспективе через год. trade-offs?",
+    "should_trigger": false
+  }
+]

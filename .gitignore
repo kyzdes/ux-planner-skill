@@ -8,3 +8,6 @@ __pycache__/
 
 # AI agent local project memory (per ~/.claude/CLAUDE.md global rule — never commit)
 context-map-*/
+
+# Skill-creator run_loop intermediate artifacts (timestamped dirs with logs)
+skills/*/evals/run_loop_results/

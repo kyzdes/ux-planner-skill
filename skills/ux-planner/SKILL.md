@@ -1,6 +1,16 @@
 ---
 name: ux-planner
-description: Превращает произвольные описания продукта/фичей (на любом языке) в структурированную English UX Spec, готовую к передаче в huashu-design. Use when user describes a feature, app, dashboard, website, or product idea ("хочу приложение для X", "make me a dashboard", "нужен сервис для Y", "design a SaaS", "сделай продукт"), especially when the description is vague, incomplete, or product-shape is unclear. Conducts hybrid interview (one batch of 5 questions upfront + adaptive follow-ups), actively proposes UX patterns and product archetypes when user is stuck (advisor mode), and produces a markdown spec covering: product framing, functional scope, user flows, screen inventory, per-screen briefs, states, constraints, design context, and a dedicated huashu-design hand-off section that pre-answers huashu's 10 standard questions (design context, variations, fidelity, tweaks, position-4 per screen, information density type, brand assets). Triggers on Russian + English product/feature descriptions; output spec is English regardless of input language. NOT for visual design execution, animations, decks, infographics — those go directly to huashu-design. Make sure to use this skill whenever the user describes WHAT they want to build before going to design — the spec it produces saves huashu from asking 10 questions and prevents generic output.
+description: >-
+  Turn loose product/feature descriptions in any language into a structured English UX Spec ready
+  to hand off to a visual-design agent (huashu-design). Triggers on Russian and English product
+  ideas — "хочу приложение для X", "сделай продукт", "нужен dashboard", "design a SaaS",
+  "make me a dashboard", "I want an app for", "feature spec for", "UX spec" — especially when
+  the description is vague, incomplete, or product-shape is unclear. Switches to advisor mode
+  (proposes 2–3 archetypes with tradeoffs) when the user is stuck. Output spec is always English
+  regardless of input. Make sure to use this skill whenever the user describes WHAT they want
+  to build before going to design — the spec pre-answers huashu's 10 standard questions and
+  prevents generic output. NOT for visual design execution, decks, animations, infographics,
+  PRDs, or market research — those go elsewhere.
 ---
 
 # UX Planner
@@ -137,6 +147,8 @@ Read the draft for gaps. Use the trigger table in `references/interview-flow.md`
 
 If the user pushes back ("не задавай больше вопросов, делай") — respect it. Make best-judgment assumptions, mark them clearly.
 
+When proposing pattern options inline ("Auth: email / magic link / social?", "Onboarding: forced tour / sample data / empty + tooltips?"), pull the option menus from `references/ux-patterns.md` so the choices reflect a curated library, not ad-hoc invention. This keeps the spec's terminology consistent with what huashu expects downstream.
+
 ### Phase 4 · Per-screen brief synthesis
 
 For each screen in the inventory, produce:
@@ -152,6 +164,8 @@ For each screen in the inventory, produce:
 
 This is mostly inferential — don't ask the user about every screen. Use the archetype defaults and apply judgment. Surface only ambiguities (e.g., "for the home screen — should the hero be the streak count or today's habits list? both are defensible").
 
+For per-screen "Key elements" and "Interactions" fields, reference patterns by name from `references/ux-patterns.md` (e.g., "command palette (cmd-k)", "infinite scroll", "modal sheet", "long-press multi-select") rather than inventing new terminology. Huashu's design vocabulary mirrors that library — consistency here saves disambiguation downstream.
+
 ### Phase 5 · Design context discovery
 
 If Phase 1 § "design context" answer was "no design system, no brand, no references":
@@ -162,6 +176,8 @@ If Phase 1 § "design context" answer was "no design system, no brand, no refere
 - Note in §7 of the spec: "Design direction known: no — recommend huashu fallback advisor mode for visual style"
 
 If user has design system / brand / references → capture paths, links, and mention them in §7 verbatim. Don't try to extract colors/fonts yourself — that's huashu's job.
+
+When the user gets stuck on a specific UX pattern decision (auth, onboarding, empty states, list layouts, settings IA, notifications, monetization), switch to advisor mode using the templates in `references/ux-patterns.md`. Each section there is structured as "pattern → best-for → tradeoff" — assemble 2–3 differentiated options from a single section rather than dumping the whole table.
 
 ### Phase 6 · Spec generation
 
@@ -177,25 +193,29 @@ If user is in a project directory (has `package.json`, `pyproject.toml`, `.git`,
 - For `cjm-canvas`, every §8.5 tweak MUST carry a `[scope: global]` or `[scope: S<id>[, S<id>...]]` tag so the right sidebar filters tweaks by the active screen.
 - For `cjm-canvas`, §8.7 MUST describe the four sidebar blocks (Tweaks / Flow steps / Alternate states / Meta footer) plus the Copy button. Don't simplify to a generic "make it interactive" note.
 
-After saving, run a **mandatory self-review checklist** and output the result to the user before moving to Phase 7. Every item must be ✓ — fix inline if any is ✗.
+After saving, run the **mandatory self-review checklist** below and output the result to the user before moving to Phase 7. Every item must be ✓ — fix inline if any is ✗. This checklist is the single source of truth; `references/handoff-to-huashu.md` points back here.
 
 ```
 ## Self-review
-- ✓ All 9 sections present (or 10 if mobile track active in Phase 2.5)
+- ✓ All 9 sections present (10 if mobile track active in Phase 2.5)
 - ✓ §4 IDs are sequential (S1..SN, no gaps; renumber if any screen was removed mid-iteration)
 - ✓ §5 brief count == §4 row count (every screen has its own brief)
-- ✓ §8.3 row count == §4 row count
-- ✓ §8.1 has exactly one of `cjm-canvas` / `hi-fi-static` selected (and `hi-fi-static` only if all 3 skip-conditions met)
+- ✓ §6 includes per-breakpoint feature parity table (always required, even if mobile track = No)
+- ✓ §7 design direction toggle is set ("yes — describe" OR "no — recommend huashu fallback advisor")
+- ✓ §8.1 has exactly one of `cjm-canvas` / `hi-fi-static` selected (`hi-fi-static` only if all 3 skip-conditions met)
 - ✓ §8.2 has exactly one density type selected
-- ✓ §8.5 every tweak carries a `[scope: ...]` tag
-- ✓ §8.7 canvas construction hint is specific (mentions the 4 sidebar blocks for cjm-canvas, or no-canvas note for hi-fi-static)
-- ✓ §8.8 lock-in prompt embeds the absolute path of this spec
-- ✓ §6 includes per-breakpoint feature parity (always required, even if mobile track = No)
+- ✓ §8.3 row count == §4 row count (position-4 for every screen)
+- ✓ §8.4 lists ≥2 variation dimensions
+- ✓ §8.5 every tweak carries a `[scope: global]` or `[scope: S<id>[, S<id>...]]` tag
+- ✓ §8.6 brand asset checklist reflects reality (don't tick "Logo provided" if user said no)
+- ✓ §8.7 canvas construction hint is specific — mentions the 4 sidebar blocks, v1.3 multi-screen accumulator (touchedKeys, cross-screen state, counter badge, empty-state toast); or "no canvas" note for hi-fi-static
+- ✓ §8.8 lock-in prompt embeds the absolute path of this spec AND describes the multi-block format (optional Global + per-screen Screen blocks)
+- ✓ §9 lists assumptions made on the user's behalf
 - ✓ §9.4 Product Risks present (3–6 risks with mitigation hints)
 - ✓ §9.5 Considered Alternatives subsection present (empty placeholder ok at first generation)
-- ✓ No "TBD" / "TODO" anywhere
 - ✓ §10 Mobile Block present iff mobile track was confirmed in Phase 2.5
 - ✓ Hand-off phrase formatted as fenced code block (not blockquote)
+- ✓ No "TBD" / "TODO" anywhere
 ```
 
 If a check fails, fix the spec and re-run. Only proceed to Phase 7 when all are ✓.
@@ -210,7 +230,7 @@ Default hand-off phrase:
 Read this UX spec at <full-path>. Produce a <cjm-canvas | hi-fi-static from §8.1> exploring §8.4 dimensions as variant toggles. Density type: <from §8.2>. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules (filtered tweaks per active screen, flow-step nav, alternate-states block, meta footer, "Copy lock-in prompt" button generating §8.8 prompt).
 ```
 
-After the hand-off block, add a short paragraph (in the user's language) explaining the round-trip loop: open canvas in browser → toggle tweaks on the right + click CJM steps → "Copy lock-in prompt" → paste in a fresh Claude session → spec auto-updates §8.4 (locked variants) and §9.5 (archived alternatives).
+After the hand-off block, add a short paragraph (in the user's language) explaining the round-trip loop: open canvas in browser → walk the CJM steps, toggling tweaks on each screen you care about (picks persist across screens — sidebar only filters what you SEE, not what's selected) → "Copy lock-in prompt" once at the end (the button label shows live `N picks across M screens` counter) → paste in a fresh Claude session → spec auto-updates §8.4 (locked variants) and §9.5 (archived alternatives + any conflicts surfaced for review).
 
 **Memory pointer (mandatory).** After the hand-off message, save a short auto-memory entry of type `project` containing:
 - Path to the spec file
@@ -226,12 +246,15 @@ Do not invoke huashu yourself. The user runs it when ready.
 
 If a fresh user message starts with `Lock these design choices into the UX spec at <abs-path>:`, treat it as a re-entry into this skill at Phase 6 with a targeted spec edit — **not** a new product. Skip Phases 0–5. Steps:
 
-1. Read the spec at the path
-2. For each `§8.4 DIM <n> <NAME>: <selected-variant>` line in the message: in §8.4, mark `<selected-variant>` as `[locked YYYY-MM-DD]` and remove the unselected variants from §8.4
-3. Append removed variants to §9.5 Considered Alternatives in the format: `**S<id> · §8.4 DIM <n> <NAME>:** considered <list of removed>; locked <chosen> on YYYY-MM-DD.`
-4. Re-run the §6 self-review checklist
-5. Regenerate the §8 hand-off phrase (it stays the same shape but reflects any density/format changes if they happened)
-6. Tell the user what changed in 2–3 lines, give the updated path, exit. No new TaskCreate plan, no Phase 1 batch.
+1. **Read the spec** at the path.
+2. **Parse the message into blocks.** The message contains zero or one `Global:` block, followed by zero or more `Screen S<id> · <Name>:` blocks. Each block is a list of `- <Tweak label or §8.4 DIM <n> <NAME>>: <selected-variant>` lines. Treat the legacy format (single `Screen S<id> · <Name>:` block with no `Global:` header) as equivalent to a message with that one block and an empty Global section — full backwards compatibility, no error.
+3. **Detect conflicts FIRST, before locking anything.** If the same DIM / tweak label is present in more than one block (e.g., both `Global:` and `S2`, or `S1` and `S2`) with **different** selected variants, do NOT lock that entry. Instead append to §9.5: `**§8.4 DIM <n> <NAME> · CONFLICT:** <variant-A> chosen on <S-id-A>, <variant-B> chosen on <S-id-B> — left unlocked, user input needed.` Continue processing the remaining non-conflicting entries normally. List conflicts in the final user-facing summary so they know to resolve.
+4. **Apply non-conflicting locks.** For each `<DIM or tweak>: <selected-variant>` line that survived conflict-detection:
+    - In §8.4, mark `<selected-variant>` as `[locked YYYY-MM-DD]` and remove unselected variants.
+    - Append removed variants to §9.5 in the format: `**S<id> · §8.4 DIM <n> <NAME>:** considered <list of removed>; locked <chosen> on YYYY-MM-DD.` For lines from the `Global:` block, write `**Global · §8.4 DIM <n> <NAME>:**` instead of `**S<id> · ...**`.
+5. **Re-run the §6 self-review checklist.**
+6. **Regenerate the §8 hand-off phrase** (it stays the same shape but reflects any density/format changes if they happened).
+7. **Summarize back to the user in 2–3 lines:** how many picks were locked, how many screens contributed, any conflicts that need resolving. Give the updated spec path. Exit. No new TaskCreate plan, no Phase 1 batch.
 
 ## Adaptive rules
 

@@ -37,7 +37,7 @@ A single self-contained HTML file (React + Babel via CDN, no build) with:
   2. **Flow steps** — numbered list of the active CJM flow from §3, current step highlighted, others muted. Clicking a step swaps the active screen (canvas + sidebar re-filter).
   3. **Alternate states** — corner-case states / variant swaps reachable from any step, sourced from §5 (non-success branches) and §9 (risks). Each row labeled `<screen> · <state>` with a `VARIANT N` or `SWAP` tag.
   4. **Meta footer** — three lines: `SOURCE · ux-spec-<date>-<slug>.md`, `SYSTEM · <design-system or "—">`, `DENSITY · <RESTRAINED | HIGH-DENSITY>`.
-- **"Copy lock-in prompt" button** — sticky at the sidebar bottom. On click, assembles the §8.8 prompt with the active screen's selected tweaks and writes to clipboard via `navigator.clipboard.writeText`. Shows a 2-second "Copied" toast.
+- **"Copy lock-in prompt" button** — sticky at the sidebar bottom. Accumulates every tweak the user explicitly touched across every screen they visited, assembles the §8.8 multi-block prompt (optional `Global:` block + one block per touched screen), and writes the merged prompt to clipboard via `navigator.clipboard.writeText`. Button label carries a live counter: `Copy lock-in prompt · N picks across M screens`. Empty state (`N = 0`): the click shows a toast `Pick at least one tweak before copying` and skips the clipboard write. Success: 2-second toast `Copied · N picks across M screens`.
 
 ### `hi-fi-static`
 
@@ -84,7 +84,7 @@ Honor §10 mobile/responsive specifications when designing mobile/tablet variant
 Run §1.a Core Asset Protocol to collect brand assets before designing.
 ```
 
-Когда canvas откроется в браузере — крути твики справа, кликай шаги CJM. Когда варианты выбраны, нажми «Copy lock-in prompt» внизу сайдбара, открой новую Claude-сессию и вставь — спека обновится: выбранные варианты залочатся в §8.4, остальные уйдут в §9.5 Considered Alternatives.
+Когда canvas откроется в браузере — пройдись по шагам CJM, на каждом экране крути твики, которые тебе важны (выбор сохраняется между экранами — сайдбар лишь фильтрует то, что ВИДНО, а не то, что выбрано). Один раз нажми «Copy lock-in prompt» внизу сайдбара (на кнопке live-счётчик `N picks across M screens`), открой новую Claude-сессию и вставь — спека обновится: выбранные варианты залочатся в §8.4 (глобально либо per-screen, как ты выбрал), остальные уйдут в §9.5 Considered Alternatives. Если по одному и тому же DIM на разных экранах ты выбрал разное — skill не залочит этот DIM и поднимет конфликт в §9.5 для разрешения вручную.
 ````
 
 ### English wrapper (when user wrote English)
@@ -116,7 +116,7 @@ If the spec mentions a brand (logo / product names), add:
 Run §1.a Core Asset Protocol to collect brand assets before designing.
 ```
 
-When the canvas opens in your browser — toggle tweaks on the right, click CJM steps. When you've picked variants, click "Copy lock-in prompt" at the sidebar bottom, open a fresh Claude session, and paste — the spec updates: chosen variants get locked into §8.4, the rest archive into §9.5 Considered Alternatives.
+When the canvas opens in your browser — walk the CJM steps, toggling tweaks on each screen you care about (picks persist across screens — the sidebar only filters what you SEE, not what's selected). Click "Copy lock-in prompt" once at the end (the button shows a live `N picks across M screens` counter), open a fresh Claude session, and paste — the spec updates: chosen variants get locked into §8.4 (globally or per-screen depending on scope), the rest archive into §9.5 Considered Alternatives. If you chose conflicting variants for the same DIM on different screens, the skill will NOT lock that DIM and will surface the conflict in §9.5 for you to resolve.
 ````
 
 ---
@@ -146,7 +146,7 @@ When generating the hand-off message, substitute these from the spec:
 Read this UX spec at /Users/me/Desktop/projects/habit-tracker/ux-spec-2026-04-28-habit-tracker.md. Produce a cjm-canvas exploring §8.4 dimensions as variant toggles. Density type: high-density. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules (filtered tweaks per active screen, flow-step nav, alternate-states block, meta footer, "Copy lock-in prompt" button generating §8.8 prompt). Use huashu fallback advisor mode to recommend 3 design directions before generating screens.
 ```
 
-Когда canvas откроется — крути твики справа, кликай шаги CJM. Выбрал варианты → «Copy lock-in prompt» → новая Claude-сессия → вставь.
+Когда canvas откроется — пройдись по шагам CJM, на каждом экране крути нужные твики (выбор сохраняется кросс-экранно). В конце один раз нажми «Copy lock-in prompt» (счётчик `N picks across M screens` подскажет сколько ты накликал), вставь в новую Claude-сессию — скилл применит multi-block lock-in.
 ````
 
 ### Example 2: server metrics dashboard (with mobile track, cjm-canvas)
@@ -160,7 +160,7 @@ To start the design in huashu, open a new session and say (copy the block):
 Read this UX spec at /Users/me/Desktop/projects/metrics-dashboard/ux-spec-2026-04-28-server-metrics.md. Produce a cjm-canvas exploring §8.4 dimensions as variant toggles. Density type: high-density. Honor §8.3 per-screen position-4 answers and §8.7 canvas construction rules (filtered tweaks per active screen, flow-step nav, alternate-states block, meta footer, "Copy lock-in prompt" button generating §8.8 prompt). Honor §10 mobile/responsive specifications when designing mobile/tablet variants.
 ```
 
-When the canvas opens in your browser, toggle tweaks on the right and click CJM steps. After you've picked variants, click "Copy lock-in prompt" at the sidebar bottom, open a fresh Claude session, and paste — the spec updates.
+When the canvas opens in your browser, walk the CJM steps and toggle tweaks on each screen you care about — picks persist across screens. Click "Copy lock-in prompt" once at the end (button shows a live `N picks across M screens` counter), open a fresh Claude session, and paste — the spec updates per the multi-block lock-in protocol.
 ````
 
 ### Example 3: SaaS landing page (1 screen, hi-fi-static)
@@ -224,37 +224,27 @@ Don't re-run Phase 1 batch for an extension — it's noise. Skip to Phase 3 with
 
 The Copy-prompt round-trip lands in a fresh Claude session as text starting with `Lock these design choices into the UX spec at <abs-path>:`. Treat as a targeted spec update:
 
-1. Read the spec at the path
-2. Find §8.4 — for each `DIM <n>` mentioned, mark the chosen variant `[locked YYYY-MM-DD]` and remove unselected variants from §8.4
-3. Add removed variants to §9.5 Considered Alternatives in the format: `**S<id> · §8.4 DIM <n> <NAME>:** considered <list>; locked <chosen> on YYYY-MM-DD.`
-4. Re-run §6 self-review (sequential IDs, brief-count match, etc.)
-5. Regenerate the §8 hand-off phrase if anything in §8.1/§8.2 changed
-6. Don't open Phase 1 / Phase 3 — this is a targeted edit, not a re-interview
+1. Read the spec at the path.
+2. **Parse the message into blocks.** The message contains zero or one `Global:` block followed by zero or more `Screen S<id> · <Name>:` blocks. Each block lists `- <DIM or tweak>: <selected-variant>` lines. The legacy single-screen format (just one `Screen Sx · Name:` block with no `Global:` header) is still valid input and should be processed the same way.
+3. **Detect conflicts first.** If the same `DIM <n>` (or same tweak label) appears in more than one block with different selected variants, do NOT lock it — append to §9.5: `**§8.4 DIM <n> <NAME> · CONFLICT:** <variant-A> on <S-id-A>, <variant-B> on <S-id-B> — left unlocked, user input needed.` Continue with the non-conflicting entries.
+4. **Apply non-conflicting locks.** For each surviving `<DIM or tweak>: <variant>` line: mark the chosen variant `[locked YYYY-MM-DD]` in §8.4, remove unselected variants, archive removed to §9.5 in the format `**S<id> · §8.4 DIM <n> <NAME>:** considered <list>; locked <chosen> on YYYY-MM-DD.` Lines from the `Global:` block use `**Global · §8.4 DIM <n> <NAME>:**` instead of `**S<id> · ...**`.
+5. Re-run §6 self-review (sequential IDs, brief-count match, etc.).
+6. Regenerate the §8 hand-off phrase if anything in §8.1/§8.2 changed.
+7. Summarize back to the user in 2–3 lines: how many picks were locked, how many screens contributed, any conflicts surfaced. Don't open Phase 1 / Phase 3 — this is a targeted edit, not a re-interview.
 
 ---
 
 ## Sanity check before hand-off
 
-Before printing the hand-off message, verify:
+The full self-review checklist lives in `SKILL.md` Phase 6 (single source of truth). Run it before printing any hand-off message — every item must be ✓.
 
-- [ ] All 9 sections of spec are present (or 10 if mobile track active)
-- [ ] §4 IDs are contiguous (S1..SN, no gaps)
-- [ ] §5 brief count == §4 row count
-- [ ] §8.1 has exactly one of `cjm-canvas` / `hi-fi-static` checked (and `hi-fi-static` only if all 3 skip-conditions met)
-- [ ] §8.2 has exactly one density type checked
-- [ ] §8.3 has a row for every screen in §4
-- [ ] §8.4 lists at least 2 variation dimensions
-- [ ] §8.5 every tweak has a `[scope]` tag (`global` or `S<id>[, S<id>...]`)
-- [ ] §8.6 brand asset checklist reflects reality (don't check "Logo provided" if user said no)
-- [ ] §8.7 canvas construction hint present (not generic — specific to this spec)
-- [ ] §8.8 lock-in prompt template references the absolute path of this spec
-- [ ] §7 design direction toggle is set ("yes — describe" OR "no — recommend advisor")
-- [ ] §6 includes per-breakpoint feature parity table (always required)
-- [ ] §9.4 Product Risks present (3–6 entries with mitigation)
-- [ ] §9.5 Considered Alternatives subsection present (empty placeholder ok at first generation)
-- [ ] §10 Mobile Block present iff mobile track confirmed in Phase 2.5
-- [ ] Hand-off phrase is a fenced code block, not a blockquote
-- [ ] No "TBD" / "TODO" anywhere
-- [ ] §9 lists assumptions made on the user's behalf
+If any check fails, fix the spec inline and re-run the checklist. Do NOT send the hand-off message with unchecked items: a half-validated spec breaks huashu's downstream assumptions (canvas filtering, lock-in round-trip, mobile track) more often than it saves time.
 
-If any check fails, fix and re-save before sending hand-off message.
+Common reasons checks fail in practice:
+
+- §8.5 tweak added late without a `[scope]` tag — canvas sidebar can't filter it
+- §4 renumbered after a screen was cut — §5 / §8.3 still reference the old IDs
+- §8.8 lock-in prompt has a placeholder path (e.g., `<full-path>`) instead of the actual saved spec's absolute path — round-trip back to Claude breaks
+- §9.5 missing entirely on a freshly generated spec — round-trip Phase 7.5 has nowhere to archive non-chosen variants
+
+When in doubt about a specific item's intent, read its line in SKILL.md Phase 6 — each item is one assertion with implicit recovery context.

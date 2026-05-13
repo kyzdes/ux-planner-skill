@@ -1,0 +1,82 @@
+{
+  "skill_name": "ux-planner",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Хочу сделать приложение для трекинга привычек",
+      "expected_output": "Phase 0 detects archetype = mobile-utility. Phase 1 issues 5-question batch in Russian (Q1 may be skipped because archetype is locked). Phase 2 drafts 5 screens (S1 Home / S2 Detail / S3 Add / S4 Stats / S5 Settings) and 3–4 flows (onboarding, daily logging, review). Phase 2.5 is SKIPPED (mobile-utility already mobile-primary). Phase 3 follow-ups cover auth, monetization, notifications, empty state. Phase 6 generates an English spec saved as ux-spec-YYYY-MM-DD-habit-tracker.md. §8.1 = cjm-canvas (5+ screens, 3 flows → fails skip-conditions). All §8.5 tweaks carry [scope: ...] tags. §8.7 mentions the v1.3 multi-screen accumulator + counter badge. §9.5 Considered Alternatives is present (empty placeholder). Hand-off phrase emitted as a fenced code block.",
+      "files": [],
+      "expectations": [
+        "Output spec file is in English regardless of Russian input",
+        "Saved filename matches pattern ux-spec-YYYY-MM-DD-*.md",
+        "Spec body contains '§8.1' selected as 'cjm-canvas'",
+        "§4 Screen Inventory lists 5 or more screens (S1..S5+ sequential)",
+        "Every tweak listed in §8.5 carries a '[scope: global]' or '[scope: S<id>...]' tag",
+        "§8.7 mentions multi-screen accumulator / touchedKeys / counter badge (v1.3-correct)",
+        "§8.8 lock-in prompt template embeds the absolute path of the saved spec",
+        "§9.4 Product Risks subsection contains 3 to 6 risks each with a mitigation hint",
+        "§9.5 Considered Alternatives subsection exists (empty placeholder is acceptable)",
+        "§10 Mobile / Responsive Design Block is absent (Phase 2.5 was skipped for mobile-utility)",
+        "Hand-off message contains a fenced ``` code block, not a blockquote"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Make me a dashboard for monitoring server metrics",
+      "expected_output": "Phase 0 detects archetype = dashboard. Phase 1 issues 5-question batch in English with Q1 noted-as-skipped. Phase 2 drafts dashboard defaults (overview KPIs, drill-down, comparison, alerts, settings). Density type = high-density. Reference inspiration mentions Datadog/Grafana/Honeycomb if user provides. Phase 2.5 asks the mobile/responsive question explicitly (web-archetype trigger). Phase 6 spec: §8.1 = cjm-canvas (5+ screens with shared chrome). §8.5 tweaks scoped per-screen (e.g., tile-density [scope: S1], comparison-split [scope: S3]). §8.7 describes browser chrome with product domain in URL bar.",
+      "files": [],
+      "expectations": [
+        "Output spec file is in English",
+        "Phase 2.5 mobile/responsive question was asked once (user must answer Y/N)",
+        "§8.1 selected as 'cjm-canvas'",
+        "§8.2 density type selected as 'high-density'",
+        "§4 lists at least 5 screens",
+        "At least one §8.5 tweak uses screen-scoped tag (e.g., '[scope: S1]'), not all global",
+        "§8.7 mentions browser chrome with URL bar showing product domain",
+        "§9.4 Product Risks present (3–6 entries)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Делаю что-то для финансов, ещё не понимаю что",
+      "expected_output": "Phase 0 detects ambiguity → switches to advisor mode IMMEDIATELY, does NOT run Phase 1 batch. Proposes exactly 3 archetypes with one-line tradeoffs: (a) personal expense tracker, (b) investment dashboard, (c) B2B accounting tool. Asks user to pick before going deeper. Does NOT save a spec file until user chooses an archetype.",
+      "files": [],
+      "expectations": [
+        "No Phase 1 batch of 5 questions was issued to the user",
+        "Response proposes exactly 3 archetypes (not 1, not 5)",
+        "Each archetype has a one-line tradeoff or 'cost' note",
+        "No ux-spec-*.md file was saved during this session",
+        "Skill awaits user's archetype choice before continuing"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Нужен сервис записи к врачу онлайн",
+      "expected_output": "Phase 0 detects borderline archetype (mobile-utility / web-app). Phase 1 batch in Russian with Q1 listing both platform options. Phase 2 drafts flows: search doctor → book slot → confirm. States cover no-slots / cancelled-by-doctor / sms-not-delivered / payment-failure. Phase 6 spec: §8.1 = cjm-canvas (multi-screen booking flow with auth states). §8.7 alternate-states block covers slot-conflict, payment-failure, sms-resend, cancelled-by-doctor.",
+      "files": [],
+      "expectations": [
+        "Phase 1 Q1 (product type) explicitly offers both mobile-app and web-app as options",
+        "§3 User Flows includes a doctor-search → booking → confirmation flow",
+        "§5 Per-Screen Briefs document at least 2 non-success states per critical screen (no-slot, cancelled, payment-failure, etc.)",
+        "§8.1 selected as 'cjm-canvas'",
+        "§8.7 alternate-states block enumerates at least 3 corner-case states",
+        "Auth model in §6 is specified (e.g., email + SMS verification)"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Хочу landing для AI-инструмента, сегмент — разработчики",
+      "expected_output": "Phase 0 detects archetype = landing. Phase 1 batch in Russian (Q1 may be skipped). Phase 2 drafts a single-page landing with sections: hero, features, social proof, pricing, FAQ, CTA, footer. Audience inferred as developers (explicit). Density restrained. Phase 2.5 asks mobile/responsive question. Phase 6 spec: §8.1 = hi-fi-static (1 screen + 1 flow + no auth branching → all 3 skip-conditions met). 3 variation dimensions (hero layout, pricing presentation, typography). §8.7 notes no CJM sidebar, no Copy-prompt button. §8.5 tweaks still carry [scope] tags for forward-compat.",
+      "files": [],
+      "expectations": [
+        "Output spec file is in English",
+        "§8.1 selected as 'hi-fi-static' (only legal hi-fi-static path: ≤2 screens AND ≤1 flow AND no auth branching)",
+        "§4 Screen Inventory lists 1 or 2 screens maximum",
+        "§3 User Flows lists 1 flow only",
+        "§8.7 notes the absence of the CJM sidebar and Copy-prompt button for hi-fi-static",
+        "§8.5 tweaks still carry [scope] tags despite static delivery (forward-compat)",
+        "§8.2 density type selected as 'restrained'"
+      ]
+    }
+  ]
+}

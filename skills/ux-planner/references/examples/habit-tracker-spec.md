@@ -328,7 +328,9 @@
 
 ### 8.7 Canvas construction hint (for huashu)
 
-cjm-canvas single HTML (React + Babel via CDN). Stage area: iframe-wrapped iPhone frame (use existing `assets/ios_frame.jsx` as reference) for the active screen. Above frame: pill `S<id> · <NAME>`. No browser chrome (mobile app, not web).
+Start from `skills/ux-planner/assets/canvas-scaffold.html` and replace the HUASHU-marked blocks with the content below. Do NOT change the canvas-shell logic (state model, `buildLockInPrompt`, `CopyLockInButton`) — that's the v1.3 contract.
+
+cjm-canvas single HTML (React + Babel via CDN). Stage area: iframe-wrapped iPhone frame (replace browser chrome from scaffold with an iOS-frame variant). Above frame: pill `S<id> · <NAME>`. No browser chrome (mobile app, not web).
 
 Right sidebar (~360px sticky, 4 blocks):
 1. **Tweaks** — filter §8.5 by active screen `[scope]`. Tweaks tagged with `§8.4 DIM <n>` headings render as primary toggle groups; non-DIM tweaks below in a "Polish" section.
@@ -341,18 +343,28 @@ Right sidebar (~360px sticky, 4 blocks):
    - `Sync conflict banner` — SWAP (overlays any screen)
 4. **Meta footer** — `SOURCE · ux-spec-2026-04-28-habit-tracker.md` / `SYSTEM · — (no design system)` / `DENSITY · HIGH-DENSITY`.
 
-Sticky bottom button: "Copy lock-in prompt" — generates §8.8 prompt with current selections, writes to clipboard.
+Sticky bottom button: **"Copy lock-in prompt"** — accumulates every tweak the user explicitly touched across every screen they visited in this session (cross-screen `tweakState` + `touchedKeys` Set, persists when navigating via Flow steps). Button label carries a live counter `Copy lock-in prompt · N picks across M screens`. Empty-state click (`touchedKeys.size === 0`) shows toast `Pick at least one tweak before copying` and skips clipboard write. Success: 2-second toast `Copied · N picks across M screens` with `document.execCommand('copy')` fallback for `file://` permission issues.
 
 ### 8.8 Lock-in prompt template (for the Copy button)
 
 ```
 Lock these design choices into the UX spec at /Users/me/Desktop/projects/habit-tracker/ux-spec-2026-04-28-habit-tracker.md:
 
-Screen <ACTIVE-S-id> · <ACTIVE-SCREEN-NAME>:
+Global:
 - §8.4 DIM <n> <NAME>: <SELECTED-VARIANT>
-(repeat per active tweak that maps to a §8.4 dimension)
+- <Tweak label>: <SELECTED-VARIANT>
+(emit one line per touched key with [scope: global]; omit Global block if zero global picks)
 
-Action: update §8.4 — mark these variants as "locked" for this screen and move non-chosen variants to §9.5 Considered Alternatives. Re-run §6 self-review and regenerate the §8 hand-off phrase.
+Screen <S-id-A> · <SCREEN-NAME-A>:
+- §8.4 DIM <n> <NAME>: <SELECTED-VARIANT>
+- <Tweak label>: <SELECTED-VARIANT>
+(emit one line per touched key with that screen in [scope])
+
+Screen <S-id-B> · <SCREEN-NAME-B>:
+- <Tweak label>: <SELECTED-VARIANT>
+(repeat one block per touched screen; ordered by S-id ascending)
+
+Action: update §8.4 — mark these variants as "locked" (globally for Global block, per-screen for Screen blocks) and move non-chosen variants to §9.5 Considered Alternatives. If the same DIM is locked to different variants across blocks, do NOT lock — record the conflict in §9.5 and surface it back to the user. Re-run §6 self-review and regenerate the §8 hand-off phrase.
 ```
 
 ## 9. Open Questions & Assumptions

@@ -201,9 +201,11 @@
 
 No CJM sidebar, no flow nav, no alternate-states block — this is a single screen. If huashu wants to expose tweaks (hero / pricing / typography), use a small floating panel (top-right or bottom-right corner), not a full sidebar. No "Copy lock-in prompt" button (round-trip not needed for a single screen — user just edits §8.4 directly).
 
+**Scaffold note:** `skills/ux-planner/assets/canvas-scaffold.html` is for `cjm-canvas` only — do NOT start from it for `hi-fi-static`. The scaffold's sidebar / flow nav / state model is overhead for a single screen.
+
 ### 8.8 Lock-in prompt template (for the Copy button)
 
-Not applicable — `hi-fi-static` doesn't include a Copy button. To lock §8.4 picks, the user edits the spec directly or starts a new ux-planner session with feedback. (If the site ever grows past the skip-conditions, switch §8.1 to `cjm-canvas` and this section gets populated.)
+Not applicable — `hi-fi-static` doesn't include a Copy button. To lock §8.4 picks, the user edits the spec directly or starts a new ux-planner session with feedback. (If the site ever grows past the skip-conditions, switch §8.1 to `cjm-canvas`, regenerate the canvas from `skills/ux-planner/assets/canvas-scaffold.html`, and this section gets populated with the v1.3 multi-block template — see `references/spec-template.md` §8.8 for the canonical shape.)
 
 ## 9. Open Questions & Assumptions
 

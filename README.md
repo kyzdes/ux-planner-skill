@@ -107,7 +107,7 @@ In a fresh Claude Code session (with the skill installed):
 
 Expected behavior: detect mobile/web borderline archetype → issue 5-question batch → draft features/flows/screens → ask the mobile-track question → adaptive follow-ups → save English spec → output hand-off code block.
 
-Five canonical test prompts live in `test-prompts.json`.
+Five canonical test prompts (with verifiable `expectations[]`) live in `skills/ux-planner/evals/evals.json`, following the [skill-creator](https://github.com/anthropics/claude-plugins-official) schema so they can be replayed via `run_eval.py` / `aggregate_benchmark.py`.
 
 ---
 
@@ -128,31 +128,46 @@ Use them in sequence: `ux-planner` → spec → `huashu-design`.
 ## Repo layout
 
 ```
-ux-researcher-skill/
-├── SKILL.md                       # Main workflow + interview logic (8 phases)
-├── README.md                      # This file
-├── test-prompts.json              # Eval test cases
-├── references/
-│   ├── interview-flow.md          # Batch templates + Phase 2.5 mobile question + adaptive triggers + advisor mode
-│   ├── product-archetypes.md      # 7 product archetypes + redesign-existing branch
-│   ├── ux-patterns.md             # Common UX pattern library
-│   ├── spec-template.md           # Output format + §10 Mobile Block (conditional)
-│   ├── handoff-to-huashu.md       # Hand-off phrasing + sanity checklist
-│   └── examples/
-│       ├── habit-tracker-spec.md
-│       ├── saas-analytics-spec.md
-│       └── landing-product-spec.md
-└── assets/                        # Reserved for future flow diagrams, IA maps
+ux-researcher-skill/                            # repo
+├── README.md                                   # this file
+├── LICENSE
+├── .claude-plugin/plugin.json                  # plugin manifest
+├── hooks/hooks.json                            # SessionStart auto-update hook
+├── scripts/auto-update.sh                      # marketplace refresh script
+└── skills/
+    └── ux-planner/                             # the skill itself (folder name = SKILL.md `name`)
+        ├── SKILL.md                            # main workflow + interview logic (8 phases + 7.5 re-entry)
+        ├── evals/
+        │   └── evals.json                      # 5 canonical test cases with expectations[] (skill-creator schema)
+        ├── assets/
+        │   └── canvas-scaffold.html            # reference cjm-canvas HTML (React+Babel CDN, v1.3-correct)
+        └── references/
+            ├── interview-flow.md               # batch templates + Phase 2.5 mobile question + adaptive triggers + advisor mode
+            ├── product-archetypes.md           # 7 product archetypes + redesign-existing branch
+            ├── ux-patterns.md                  # common UX pattern library
+            ├── spec-template.md                # output format + §10 Mobile Block (conditional)
+            ├── handoff-to-huashu.md            # hand-off phrasing + pointer to SKILL.md SSOT self-review
+            └── examples/
+                ├── habit-tracker-spec.md
+                ├── saas-analytics-spec.md
+                └── landing-product-spec.md
 ```
 
 ---
 
 ## Status
 
-v1.2 — current release. Additions over v1.1:
+v1.3 — current release. Additions over v1.2:
+
+- **Multi-screen Copy button accumulator.** The cjm-canvas "Copy lock-in prompt" button now collects every tweak the user explicitly touched **across all screens they visited**, not just the active one. One Copy click = one paste = the entire iteration locked in.
+- **§8.8 multi-block prompt format.** Optional `Global:` block (for `[scope: global]` picks) + one `Screen Sx · Name:` block per screen the user touched. Legacy single-screen prompts from pre-v1.3 canvases remain valid input — Phase 7.5 accepts both formats.
+- **Live counter on the Copy button.** Label reads `Copy lock-in prompt · N picks across M screens` so the user sees exactly how much is queued. Empty-state click shows a toast `Pick at least one tweak before copying` and skips the clipboard write.
+- **Conflict detection in Phase 7.5.** If the user picked different variants for the same DIM on different screens, that DIM is NOT locked — the conflict is recorded in §9.5 with both variants kept open, and surfaced in the user-facing summary so they can resolve manually.
+
+Carried over from v1.2:
 
 - **§8.1 delivery format = `cjm-canvas` by default** (interactive HTML canvas with iframe-wrapped screen + right sidebar with §8.4 tweaks filtered per active screen, clickable CJM flow nav, alternate-states block, meta footer). Falls back to `hi-fi-static` only when ≤2 screens AND ≤1 flow AND no auth/state branching.
-- **§8.5 tweaks now require `[scope: ...]` tags** so the canvas sidebar filters them by active screen.
+- **§8.5 tweaks require `[scope: ...]` tags** so the canvas sidebar filters them by active screen.
 - **§8.7 canvas construction hint** — explicit four-block sidebar spec for huashu (Tweaks / Flow steps / Alternate states / Meta footer).
 - **§8.8 lock-in prompt template + Copy button** at the canvas sidebar bottom — round-trip back to a Claude session via clipboard. Pasting the prompt re-enters the skill at Phase 7.5 and updates §8.4 (locked variants) + §9.5 (archived alternatives).
 - **§9.5 Considered Alternatives** — the canonical landing zone for non-chosen variants when the user iterates.
